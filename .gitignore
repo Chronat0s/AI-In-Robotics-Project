@@ -6,3 +6,6 @@
 
 #Ignore some build files
 /cobot-env/build/lib/
+
+# Ignore user specific conda files
+/.conda/
