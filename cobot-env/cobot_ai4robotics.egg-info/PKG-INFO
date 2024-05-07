@@ -1,5 +1,5 @@
 Metadata-Version: 2.1
-Name: cobot-ai4robotics
+Name: cobot_ai4robotics
 Version: 0.1
 Requires-Dist: gym
 Requires-Dist: pybullet

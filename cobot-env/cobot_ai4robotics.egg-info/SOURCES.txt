@@ -105,6 +105,7 @@ cobot_ai4robotics/resources/projectiles/ycb_objects/YcbStrawberry/model.urdf
 cobot_ai4robotics/resources/projectiles/ycb_objects/YcbStrawberry/texture_map.png
 cobot_ai4robotics/resources/projectiles/ycb_objects/YcbStrawberry/textured_reoriented.obj
 cobot_ai4robotics/resources/projectiles/ycb_objects/YcbStrawberry/textured_reoriented.obj.mtl
+cobot_ai4robotics/resources/projectiles/ycb_objects/YcbTennisBall/ball.py
 cobot_ai4robotics/resources/projectiles/ycb_objects/YcbTennisBall/collision_vhacd.mtl
 cobot_ai4robotics/resources/projectiles/ycb_objects/YcbTennisBall/collision_vhacd.obj
 cobot_ai4robotics/resources/projectiles/ycb_objects/YcbTennisBall/model.urdf

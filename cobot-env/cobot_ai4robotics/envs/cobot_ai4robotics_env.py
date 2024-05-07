@@ -14,6 +14,7 @@ import pybullet_data
 
 # Import objects from YCB. Remember to get training dataset from YCB for CNN.
 from cobot_ai4robotics.resources.projectiles.ycb_objects.YcbBanana.banana import Banana
+from cobot_ai4robotics.resources.projectiles.ycb_objects.YcbTennisBall.ball import Ball
 
 # Import the robot object. Look into controlling it.
 from cobot_ai4robotics.resources.cobot.kuka import Kuka
@@ -232,7 +233,8 @@ class CobotAI4RoboticsEnv(gym.Env):
 
         # Allow no more than 20 active objects at a time.
         if len(self.active_projectiles) < 20:
-            self.obj = Banana(self._p, init_pos)
+            # self.obj = Banana(self._p, init_pos)
+            self.obj = Ball(self._p, init_pos)
             self.active_projectiles.append(self.obj)
         else:
             # Get an object currently not moving. If there is none, skip this iteration and return.
