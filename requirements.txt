@@ -1,0 +1,10 @@
+# Run pip install -r requirements.txt
+gym
+pybullet
+numpy
+torch
+matplotlib
+
+# From pybullet-robot-envs
+pandas
+# tensorflow

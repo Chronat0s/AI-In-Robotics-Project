@@ -1,0 +1,324 @@
+import gym
+import numpy as np
+import math
+import pybullet as p
+from pybullet_utils import bullet_client as bc
+from cobot_ai4robotics.resources.car import Car # Have to swap these out.
+from cobot_ai4robotics.resources.plane import Plane
+from cobot_ai4robotics.resources.goal import Goal
+import matplotlib.pyplot as plt
+import time
+
+import os
+import pybullet_data
+
+# Import objects from YCB. Remember to get training dataset from YCB for CNN.
+from cobot_ai4robotics.resources.projectiles.ycb_objects.YcbBanana.banana import Banana
+
+# Import the robot object. Look into controlling it.
+from cobot_ai4robotics.resources.cobot.kuka import Kuka
+# from cobot_ai4robotics.resources.cobot.panda_env import pandaEnv
+
+RENDER_HEIGHT = 320
+RENDER_WIDTH = 240
+
+class CobotAI4RoboticsEnv(gym.Env):
+    metadata = {'render.modes': ['human', 'fp_camera', 'tp_camera']}
+
+    def __init__(self, isDiscrete=True, renders=False):
+        if (isDiscrete):
+            self.action_space = gym.spaces.Discrete(9)
+        else:
+            self.action_space = gym.spaces.box.Box(
+                low=np.array([-.967, -2, -2.96, 0.19, -2.96, -2.09, -3.05], dtype=np.float32),
+                high=np.array([.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05], dtype=np.float32))
+        self.observation_space = gym.spaces.box.Box(
+            low=np.array([-40, -40], dtype=np.float32),
+            high=np.array([40, 40], dtype=np.float32))
+        self.np_random, _ = gym.utils.seeding.np_random()
+
+        # Make the GUI client or not.
+        if renders:
+          self._p = bc.BulletClient(connection_mode=p.GUI)
+        else:
+          self._p = bc.BulletClient()
+
+        self.reached_goal = False
+        self._timeStep = 0.01
+        self._actionRepeat = 50
+        self._renders = renders
+        self._isDiscrete = isDiscrete
+        self.car = None
+        self.goal_object = None
+        self.goal = None
+        self.done = False
+        self.prev_dist_to_goal = None
+        self.rendered_img = None
+        self.render_rot_matrix = None
+        self._envStepCounter = 0
+
+        # These variables are made for the AI4Robotics Final Project.
+        self.difficulty = 1
+        self.cobot = None
+        self.active_projectiles = []
+
+        # Camera positioning and orientation.
+        self._cam_dist = 4.7
+        self._cam_yaw = 270
+        self._cam_pitch = 0
+
+        self.reset()
+
+
+    def step(self, action):
+        ob = None # Placeholders until these functions get put in place.
+        reward = 0
+
+
+        # Feed action to the car and get observation of car's state
+        # if (self._isDiscrete):
+        #     fwd = [-1, -1, -1, 0, 0, 0, 1, 1, 1]
+        #     steerings = [-0.6, 0, 0.6, -0.6, 0, 0.6, -0.6, 0, 0.6]
+        #     throttle = fwd[action]
+        #     steering_angle = steerings[action]
+        #     action = [throttle, steering_angle]
+        # self.car.apply_action(action)
+  
+        #action = np.random.uniform(self.cobot.ll, self.cobot.ul) # Random actions. Replace with DQN.
+
+
+        for i in range(self._actionRepeat):
+            if (self._envStepCounter % 10) == 0:
+                self.generateProjectile()          
+            self.cobot.applyAction(action)     
+            # self.clear_floor()
+            self._p.stepSimulation()
+            self.refreshImage()
+
+            # Check for a hit and impose penalty (based on location?)
+            for index, projectile in enumerate(self.active_projectiles):
+                contact_points = p.getClosestPoints(self.cobot.kukaUid, projectile.id, distance = 0)
+                if contact_points:
+                    print("Contact by banana no.", index, 'at point', f'({contact_points[0][5][0]:.2f}', f'{contact_points[0][5][1]:.2f}', f'{contact_points[0][5][2]:.2f})' , 'on KUKA.') 
+                    # [0][5] - one point on the KUKA, [0][6] - one point on the banana
+
+        #   carpos, carorn = self._p.getBasePositionAndOrientation(self.car.car)
+        #   goalpos, goalorn = self._p.getBasePositionAndOrientation(self.goal_object.goal)
+        #   car_ob = self.getExtendedObservation()
+            if self._renders:
+                time.sleep(self._timeStep)
+            if self._termination():
+                self.done = True
+                break
+            self._envStepCounter += 1
+
+        # Compute reward as L2 change in distance to goal
+        # dist_to_goal = math.sqrt(((car_ob[0] - self.goal[0]) ** 2 +
+                                   # (car_ob[1] - self.goal[1]) ** 2))
+        # dist_to_goal = math.sqrt(((carpos[0] - goalpos[0]) ** 2 +
+        #                           (carpos[1] - goalpos[1]) ** 2))
+        # reward = max(self.prev_dist_to_goal - dist_to_goal, 0)
+        # reward = -dist_to_goal
+        # self.prev_dist_to_goal = dist_to_goal
+
+        # Done by reaching goal
+        # if dist_to_goal < 1.5 and not self.reached_goal:
+        #     #print("reached goal")
+        #     self.done = True
+        #     self.reached_goal = True
+
+        # ob = car_ob
+
+        
+        return ob, reward, self.done, dict()
+
+    def seed(self, seed=None):
+        self.np_random, seed = gym.utils.seeding.np_random(seed)
+        return [seed]
+
+    def reset(self):
+        self._p.resetSimulation()
+        self._p.setTimeStep(self._timeStep)
+        self._p.setGravity(0, 0, -9.81)
+        # Reload the plane and car
+        Plane(self._p) # The floor. Stops everything from falling.\
+        # self.car = Car(self._p)
+        self._envStepCounter = 0
+
+        # Set the goal to a random target
+        # x = (self.np_random.uniform(5, 9) if self.np_random.integers(2) else
+        #      self.np_random.uniform(-9, -5))
+        # y = (self.np_random.uniform(5, 9) if self.np_random.integers(2) else
+        #      self.np_random.uniform(-9, -5))
+        # self.goal = (x, y)
+        # self.done = False
+        # self.reached_goal = False
+
+        # # Visual element of the goal
+        # self.goal_object = Goal(self._p, self.goal)
+
+        # # Get observation to return
+        # carpos = self.car.get_observation()
+
+        # self.prev_dist_to_goal = math.sqrt(((carpos[0] - self.goal[0]) ** 2 +
+        #                                    (carpos[1] - self.goal[1]) ** 2))
+        # car_ob = self.getExtendedObservation()
+
+        # Set up table?
+        self.table_id = p.loadURDF(os.path.join(pybullet_data.getDataPath(), "table/table.urdf"),
+                              basePosition=[0, 0.0, 0.0], useFixedBase=True)
+        
+        # Get the height of the table.
+        table_info = p.getCollisionShapeData(self.table_id, -1)[0]
+        self._h_table = table_info[5][2] + table_info[3][2]/2
+
+        # set ws limit on z according to table height
+        # self._ws_lim[2][:] = [self._h_table, self._h_table + 0.3]
+
+        # Set up cobot on top of table
+        self.urdfRootPath=pybullet_data.getDataPath()
+        self.cobot = Kuka(urdfRootPath=self.urdfRootPath, base_position=[0,0,self._h_table])
+        # self.cobot = pandaEnv(self._p._client, base_position=(self.cobot_base_pos), use_IK=1)
+        # print(self.cobot._base_position)
+
+        # Set up camera
+        self.render()
+        car_ob = None # Placeholder until obs for bot are working.
+        # Test obstacle generation
+        # self.generateProjectile()
+
+        return np.array(car_ob, dtype=np.float32)
+
+    def getExtendedObservation(self):
+        # self._observation = []  #self._racecar.getObservation()
+        carpos, carorn = self._p.getBasePositionAndOrientation(self.car.car)
+        goalpos, goalorn = self._p.getBasePositionAndOrientation(self.goal_object.goal)
+        invCarPos, invCarOrn = self._p.invertTransform(carpos, carorn)
+        goalPosInCar, goalOrnInCar = self._p.multiplyTransforms(invCarPos, invCarOrn, goalpos, goalorn)
+
+        observation = [goalPosInCar[0], goalPosInCar[1]]
+        return observation
+
+    def _termination(self):
+        return False #self._envStepCounter > 1000
+
+    def close(self):
+        self._p.disconnect()
+
+    # Below are functions made for the AI4Robotics Final Project.
+    def generateProjectile(self, difficulty=20):
+        '''
+            To be called as part of step() every n steps to make 1 new projectile.
+        '''
+        # Generate a single random projectile from a selection of URDFs
+        # ~ 5m from the base plate of the cobot. Apply an external force
+        # to it so that it moves towards an area randomly around the cobot,
+        # but not at the immovable base plate section (that's just unfair!).
+        self.difficulty = difficulty
+
+        # Randomly pick one class from a list to make a projectile.
+        ...
+
+        # Random object spawn locations
+        # dim | min | max |
+        # X   | 6   | 9   |
+        # Y   | -3  | 3   |
+        # Z   | 0.1   | 3   |
+        x = np.random.default_rng().uniform(4.0, 9.0, 1)[0]
+        y = np.random.default_rng().uniform(-1.5, 1.5, 1)[0]
+        z = np.random.default_rng().uniform(0.1, 4.0, 1)[0]
+
+        init_pos = np.array([x,y,z])
+
+        # Allow no more than 20 active objects at a time.
+        if len(self.active_projectiles) < 20:
+            self.obj = Banana(self._p, init_pos)
+            self.active_projectiles.append(self.obj)
+        else:
+            # Get an object currently not moving. If there is none, skip this iteration and return.
+            for index, projectile in enumerate(self.active_projectiles):
+                pos, orn = self._p.getBasePositionAndOrientation(projectile.id)
+                if pos[2] < self._h_table + 0.1:
+                    self.obj = self.active_projectiles[index]
+                    self._p.resetBasePositionAndOrientation(self.obj.id, init_pos, orn)
+                    break # only get one.
+                elif index >= len(self.active_projectiles): 
+                    return    
+
+
+        # Targeting.
+        mass = .066 # Mass of the banana.
+        y_target = np.random.default_rng().uniform(-0.5, 0.5, 1)[0]
+        z_target = np.random.default_rng().uniform(self._h_table, 2.5, 1)[0]
+        target = np.array(self.cobot.base_position) + np.array([0,y_target,z_target])#np.array([0, y, z])
+
+        # Direction and distance to target.
+        duration = 0.07 # Duration to apply force for. Larger is slower, smaller is faster. May miss target if too slow.
+
+        # Initial velocity in 3d to hit target
+        v0 = [(target[i] - init_pos[i]) / duration for i in range(3)]
+
+        # Factor in gravity for initial velocity.
+        g = -9.81
+        v0[2] -= g * duration / 2
+
+        # Required force calculation.
+        force = [(v0[i] * mass) / duration for i in range(3)]
+
+        self._p.applyExternalForce(objectUniqueId=self.obj.id, 
+                             linkIndex=-1,
+                             forceObj=force,
+                             posObj =init_pos,
+                             flags=p.WORLD_FRAME)
+        
+        # print("New obstacle with force: ", force, "at [", x, y, z, "]")
+
+    def render(self, mode="rgb_array", close=False): # Add in an artificial camera on the table, facing the oncoming obstacles.
+        if mode != "rgb_array":
+            return np.array([])
+
+        base_pos, orn = self._p.getBasePositionAndOrientation(self.cobot.kukaUid) # .kukaUid gives the base pos and orn.
+        self.view_matrix = self._p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[5,0,base_pos[2]+1],
+                                                                distance=self._cam_dist,
+                                                                yaw=self._cam_yaw,
+                                                                pitch=self._cam_pitch,
+                                                                roll=0,
+                                                                upAxisIndex=2)
+        self.proj_matrix = self._p.computeProjectionMatrixFOV(fov=60,
+                                                        aspect=float(RENDER_WIDTH) / RENDER_HEIGHT,
+                                                        nearVal=0.1,
+                                                        farVal=100.0)
+        (_, _, px, _, _) = self._p.getCameraImage(width=RENDER_WIDTH,
+                                                height=RENDER_HEIGHT,
+                                                viewMatrix=self.view_matrix,
+                                                projectionMatrix=self.proj_matrix,
+                                                renderer=self._p.ER_BULLET_HARDWARE_OPENGL)
+        #renderer=self._p.ER_TINY_RENDERER)
+
+        rgb_array = np.array(px, dtype=np.uint8)
+        rgb_array = np.reshape(rgb_array, (RENDER_HEIGHT, RENDER_WIDTH, 4))
+
+        rgb_array = rgb_array[:, :, :3]
+        return rgb_array
+    
+    def refreshImage(self):
+        return self._p.getCameraImage(RENDER_WIDTH, RENDER_HEIGHT, viewMatrix=self.view_matrix, projectionMatrix=self.proj_matrix, renderer=self._p.ER_BULLET_HARDWARE_OPENGL)
+
+    # def clear_floor(self):
+        # print("There are", len(self.active_projectiles), "active projectiles.")
+        # deactivate_index = []
+        # for index, projectile in enumerate(self.active_projectiles):
+        #     # For each projectile in the list, check if it is on the floor and delete it.
+        #     pos, orn = p.getBasePositionAndOrientation(projectile.id)
+        #     if pos[2] < self._h_table + 0.2:    # Consider having no penalty for "below-belt" hits which are unavoidable.
+        #         # Add index of object on floor to deactivation list. 
+        #         deactivate_index.append(index)
+    
+        # Using the deactivation index, delete from the active_projectiles list and unload their URDF.
+        # for i in sorted(deactivate_index, reverse=True):
+        #     self._p.removeBody(self.active_projectiles[i].id)
+        #     del self.active_projectiles[i]
+
+        # Try a different approach - spawn a number of projectiles and move them back to the spawn zone to be refired when they hit something.  
+             
+
