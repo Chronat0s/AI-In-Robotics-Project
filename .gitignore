@@ -1,0 +1,5 @@
+# Ignore distribution directory
+/cobot-env/dist/
+
+# Ignore egg-info directory
+/cobot-env/cobot_ai4robotics.egg-info/
