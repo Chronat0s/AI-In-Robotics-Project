@@ -203,9 +203,9 @@ class CobotAI4RoboticsEnv(gym.Env):
             x = 9#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
             y_roll = np.random.default_rng().uniform(0, 1, 1)[0]
             if y_roll >= 0.5:
-                y = np.random.default_rng().uniform(0.3, 0.5, 1)[0]
+                y = np.random.default_rng().uniform(0.25, 0.5, 1)[0]
             else:
-                y = np.random.default_rng().uniform(-0.5, -0.3, 1)[0]
+                y = np.random.default_rng().uniform(-0.5, -0.25, 1)[0]
             z = np.random.default_rng().uniform(self._h_table+0.25, self._h_table+0.6, 1)[0]
         else: # High ball, free space.
             x = 9#np.random.default_rng().uniform(4.0, 9.0, 1)[0]

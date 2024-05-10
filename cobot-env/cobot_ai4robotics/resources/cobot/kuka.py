@@ -222,8 +222,9 @@ class Kuka:
     '''
     Return the current pose using inverse kinematics.
     '''
-    
-    pos = self.endEffectorPos
-    self.current_pose = p.calculateInverseKinematics(self.kukaUid, self.kukaEndEffectorIndex, pos, lowerLimits=self.ll, upperLimits=self.ul, jointRanges=self.jr, restPoses=self.rp)
+    state = p.getLinkState(self.kukaUid, self.kukaEndEffectorIndex)
+    actualEndEffectorPos = state[0]
+    # pos = self.endEffectorPos
+    self.current_pose = p.calculateInverseKinematics(self.kukaUid, self.kukaEndEffectorIndex, actualEndEffectorPos, lowerLimits=self.ll, upperLimits=self.ul, jointRanges=self.jr, restPoses=self.rp)
 
     return self.current_pose
