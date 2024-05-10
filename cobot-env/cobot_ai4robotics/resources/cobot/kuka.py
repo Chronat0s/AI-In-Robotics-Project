@@ -20,7 +20,7 @@ class Kuka:
     self.fingerAForce = 2
     self.fingerBForce = 2.5
     self.fingerTipForce = 2
-    self.useInverseKinematics = 1
+    self.useInverseKinematics = 0
     self.useSimulation = 1
     self.useNullSpace = 21
     self.useOrientation = 1
@@ -54,6 +54,7 @@ class Kuka:
         0.006418, 0.413184, -0.011401, -1.589317, 0.005379, 1.137684, -0.006539, 0.000048,
         -0.299912, 0.000000, -0.000043, 0.299960, 0.000000, -0.000200
     ]
+    self.current_pose = self.jointPositions
     self.numJoints = p.getNumJoints(self.kukaUid)
     for jointIndex in range(self.numJoints):
       p.resetJointState(self.kukaUid, jointIndex, self.jointPositions[jointIndex])
@@ -214,5 +215,15 @@ class Kuka:
         p.setJointMotorControl2(self.kukaUid,
                                 motor,
                                 p.POSITION_CONTROL,
-                                targetPosition=motorCommands[action],
+                                targetPosition=(motorCommands[action]),
                                 force=self.maxForce)
+
+  def getPose(self):
+    '''
+    Return the current pose using inverse kinematics.
+    '''
+    
+    pos = self.endEffectorPos
+    self.current_pose = p.calculateInverseKinematics(self.kukaUid, self.kukaEndEffectorIndex, pos, lowerLimits=self.ll, upperLimits=self.ul, jointRanges=self.jr, restPoses=self.rp)
+
+    return self.current_pose
