@@ -13,3 +13,4 @@
 # Ignore the camera data. Download it locally using camera_train. ..
 /camera_data/
 /cobot-env/cobot_ai4robotics.egg-info/
+/cobot-env/cobot_ai4robotics.egg-info
