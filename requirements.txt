@@ -8,3 +8,6 @@ matplotlib
 # From pybullet-robot-envs
 pandas
 # tensorflow
+
+# For using the YOLO model in the cobot-env (not for training)
+ultralytics

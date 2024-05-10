@@ -20,8 +20,13 @@ from cobot_ai4robotics.resources.projectiles.ycb_objects.YcbTennisBall.ball impo
 from cobot_ai4robotics.resources.cobot.kuka import Kuka
 # from cobot_ai4robotics.resources.cobot.panda_env import pandaEnv
 
-RENDER_HEIGHT = 320
-RENDER_WIDTH = 240
+# Import the necessary library for YOLO.
+from ultralytics import YOLO
+from PIL import Image
+from ultralytics.utils.plotting import Annotator
+
+RENDER_HEIGHT = 360 # Increased resolution to help YOLO.
+RENDER_WIDTH = 640
 
 class CobotAI4RoboticsEnv(gym.Env):
     metadata = {'render.modes': ['human', 'fp_camera', 'tp_camera']}
@@ -34,6 +39,7 @@ class CobotAI4RoboticsEnv(gym.Env):
                 low=np.array([-.967, -2, -2.96, 0.19, -2.96, -2.09, -3.05], dtype=np.float32),
                 high=np.array([.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05], dtype=np.float32))
         self.observation_space = gym.spaces.box.Box(
+            # [Current pose, projectile data (closest n projectiles?), xy distance to end effector goal (if doing task)],
             low=np.array([-40, -40], dtype=np.float32),
             high=np.array([40, 40], dtype=np.float32))
         self.np_random, _ = gym.utils.seeding.np_random()
@@ -68,6 +74,9 @@ class CobotAI4RoboticsEnv(gym.Env):
         self._cam_yaw = 270
         self._cam_pitch = 0
 
+        # Load the YOLO model.
+        self.YOLO = YOLO("./runs/detect/train3/weights/best.pt")
+
         self.reset()
 
 
@@ -89,18 +98,26 @@ class CobotAI4RoboticsEnv(gym.Env):
 
 
         for i in range(self._actionRepeat):
-            if (self._envStepCounter % 10) == 0:
+            if (self._envStepCounter % 100) == 0:
                 self.generateProjectile()          
             self.cobot.applyAction(action)     
             # self.clear_floor()
             self._p.stepSimulation()
-            self.refreshImage()
+
+            # Use the image to get formatted YOLO prediction with corresponding depth.
+            self.current_frame = self.refreshImage()
+            if (self._envStepCounter % 50) == 0:
+                yolo_pred = self.getYOLOPrediction()
+                print(yolo_pred)
+
+            # Pass the yolo_pred prediction to the observation space.
+            # Observation space is [current pose, projectile yolo_pred data (closest n projectiles), xy to goal]
 
             # Check for a hit and impose penalty (based on location?)
             for index, projectile in enumerate(self.active_projectiles):
                 contact_points = p.getClosestPoints(self.cobot.kukaUid, projectile.id, distance = 0)
                 if contact_points:
-                    print("Contact by banana no.", index, 'at point', f'({contact_points[0][5][0]:.2f}', f'{contact_points[0][5][1]:.2f}', f'{contact_points[0][5][2]:.2f})' , 'on KUKA.') 
+                    print("Contact by ball no.", index, 'at point', f'({contact_points[0][5][0]:.2f}', f'{contact_points[0][5][1]:.2f}', f'{contact_points[0][5][2]:.2f})' , 'on KUKA.') 
                     # [0][5] - one point on the KUKA, [0][6] - one point on the banana
 
         #   carpos, carorn = self._p.getBasePositionAndOrientation(self.car.car)
@@ -140,7 +157,7 @@ class CobotAI4RoboticsEnv(gym.Env):
     def reset(self):
         self._p.resetSimulation()
         self._p.setTimeStep(self._timeStep)
-        self._p.setGravity(0, 0, -9.81)
+        # self._p.setGravity(0, 0, -9.81)
         # Reload the plane and car
         Plane(self._p) # The floor. Stops everything from falling.\
         # self.car = Car(self._p)
@@ -190,15 +207,15 @@ class CobotAI4RoboticsEnv(gym.Env):
 
         return np.array(car_ob, dtype=np.float32)
 
-    def getExtendedObservation(self):
-        # self._observation = []  #self._racecar.getObservation()
-        carpos, carorn = self._p.getBasePositionAndOrientation(self.car.car)
-        goalpos, goalorn = self._p.getBasePositionAndOrientation(self.goal_object.goal)
-        invCarPos, invCarOrn = self._p.invertTransform(carpos, carorn)
-        goalPosInCar, goalOrnInCar = self._p.multiplyTransforms(invCarPos, invCarOrn, goalpos, goalorn)
+    # def getExtendedObservation(self):
+    #     # self._observation = []  #self._racecar.getObservation()
+    #     carpos, carorn = self._p.getBasePositionAndOrientation(self.car.car)
+    #     goalpos, goalorn = self._p.getBasePositionAndOrientation(self.goal_object.goal)
+    #     invCarPos, invCarOrn = self._p.invertTransform(carpos, carorn)
+    #     goalPosInCar, goalOrnInCar = self._p.multiplyTransforms(invCarPos, invCarOrn, goalpos, goalorn)
 
-        observation = [goalPosInCar[0], goalPosInCar[1]]
-        return observation
+    #     observation = [goalPosInCar[0], goalPosInCar[1]]
+    #     return observation
 
     def _termination(self):
         return False #self._envStepCounter > 1000
@@ -207,7 +224,7 @@ class CobotAI4RoboticsEnv(gym.Env):
         self._p.disconnect()
 
     # Below are functions made for the AI4Robotics Final Project.
-    def generateProjectile(self, difficulty=20):
+    def generateProjectile(self):
         '''
             To be called as part of step() every n steps to make 1 new projectile.
         '''
@@ -215,10 +232,6 @@ class CobotAI4RoboticsEnv(gym.Env):
         # ~ 5m from the base plate of the cobot. Apply an external force
         # to it so that it moves towards an area randomly around the cobot,
         # but not at the immovable base plate section (that's just unfair!).
-        self.difficulty = difficulty
-
-        # Randomly pick one class from a list to make a projectile.
-        ...
 
         # Random object spawn locations
         # dim | min | max |
@@ -231,16 +244,16 @@ class CobotAI4RoboticsEnv(gym.Env):
 
         init_pos = np.array([x,y,z])
 
-        # Allow no more than 20 active objects at a time.
-        if len(self.active_projectiles) < 20:
+        # Allow no more than 15 active objects at a time.
+        if len(self.active_projectiles) < 15:
             # self.obj = Banana(self._p, init_pos)
             self.obj = Ball(self._p, init_pos)
             self.active_projectiles.append(self.obj)
         else:
-            # Get an object currently not moving. If there is none, skip this iteration and return.
+            # Get an object whose movement is finished. If there is none, skip this iteration and return.
             for index, projectile in enumerate(self.active_projectiles):
                 pos, orn = self._p.getBasePositionAndOrientation(projectile.id)
-                if pos[2] < self._h_table + 0.1:
+                if (pos[0] < self.cobot.base_position[0] - 1) or (abs(pos[1]) > 2): # If passed cobot x position.
                     self.obj = self.active_projectiles[index]
                     self._p.resetBasePositionAndOrientation(self.obj.id, init_pos, orn)
                     break # only get one.
@@ -249,20 +262,20 @@ class CobotAI4RoboticsEnv(gym.Env):
 
 
         # Targeting.
-        mass = .066 # Mass of the banana.
-        y_target = np.random.default_rng().uniform(-0.5, 0.5, 1)[0]
-        z_target = np.random.default_rng().uniform(self._h_table, 2.5, 1)[0]
+        mass = .058 # Mass of the ball.
+        y_target = np.random.default_rng().uniform(-0.75, 0.75, 1)[0]
+        z_target = np.random.default_rng().uniform(self._h_table, 1.5, 1)[0]
         target = np.array(self.cobot.base_position) + np.array([0,y_target,z_target])#np.array([0, y, z])
 
         # Direction and distance to target.
-        duration = 0.07 # Duration to apply force for. Larger is slower, smaller is faster. May miss target if too slow.
+        duration = 0.2 # Duration to apply force for. Larger is slower, smaller is faster. May miss target if too slow with gravity.
 
         # Initial velocity in 3d to hit target
         v0 = [(target[i] - init_pos[i]) / duration for i in range(3)]
 
         # Factor in gravity for initial velocity.
-        g = -9.81
-        v0[2] -= g * duration / 2
+        # g = -9.81
+        # v0[2] -= g * duration / 2
 
         # Required force calculation.
         force = [(v0[i] * mass) / duration for i in range(3)]
@@ -304,7 +317,62 @@ class CobotAI4RoboticsEnv(gym.Env):
         return rgb_array
     
     def refreshImage(self):
+        '''
+        Call to refresh the RGB-D and segmentation images. These are returned by the function.
+        '''
         return self._p.getCameraImage(RENDER_WIDTH, RENDER_HEIGHT, viewMatrix=self.view_matrix, projectionMatrix=self.proj_matrix, renderer=self._p.ER_BULLET_HARDWARE_OPENGL)
+
+    def getYOLOPrediction(self, show_pred=True):
+        '''
+        Pass the images from refreshImage to this function.
+        The bounding boxes of the projectiles will be predicted using the RGB data.
+        The depth value at the centre of the bounding box will be returned alongside
+        the bounding box x min/max and y min/max values.
+        '''
+        # Reconstruct the rgb image as a PIL image to pass to the YOLO model.
+        # https://stackoverflow.com/questions/70955660/how-to-get-depth-images-from-the-camera-in-pybullet
+        rgb = np.reshape(self.current_frame[2], (RENDER_HEIGHT, RENDER_WIDTH, 4)).astype(np.uint8) # RGB-A. Comes as a list, turn into wxh array.
+        depth = np.reshape(self.current_frame[3], (RENDER_HEIGHT, RENDER_WIDTH, 1)) # Depth from 0.01 to 1 units.
+
+        # print(rgb.shape, rgb)
+        # print(depth.shape, depth)
+
+        rgb_img = Image.fromarray(rgb[:,:,:3])
+
+        pred = self.YOLO.predict(rgb_img)
+
+        # Debugging. Shows the bounding boxes in a new window.
+        annotator = Annotator(rgb_img)
+        boxes = pred[0].boxes
+        # for box in boxes:
+        #     b = box.xyxy[0]
+        #     c = box.cls
+        #     annotator.box_label(b, self.YOLO.names[int(c)])
+        # annotator.show()
+
+        # Get n boxes (normalised) and package them with the depth of the centroid.
+        # https://stackoverflow.com/questions/6652253/getting-the-true-z-value-from-the-depth-buffer
+        closest_dist = 1
+        closest_box = np.array([-1, -1, -1, -1]) # If no box, return -1.
+        for box in boxes:
+            b = box.xyxy[0]
+
+            # Using b, calculate the centre pixel of the bounding box.
+            x_centre = int((b[0] + b[2])/2)
+            y_centre = int((b[1] + b[3])/2)
+
+            # Access the depth image using the x_centre and y_centre pixel coordinates.
+            box_depth_n = depth[y_centre][x_centre] # Comes normalised between 0 and 1?
+            if box_depth_n < closest_dist:
+                closest_dist = box_depth_n
+                closest_box = box.xyxyn[0]
+            print("Depth: ", box_depth_n, "at", x_centre, y_centre, "\n")
+
+        # print(boxes.shape, boxes)
+        # Flatten the array for insertion into observation.
+        #return np.concatenate(closest_box, [closest_dist])
+        
+        
 
     # def clear_floor(self):
         # print("There are", len(self.active_projectiles), "active projectiles.")

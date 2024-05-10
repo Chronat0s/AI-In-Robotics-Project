@@ -8,7 +8,8 @@ setup(
                       'numpy',
                       'matplotlib',
                       'torch',
-                      'pandas'],
+                      'pandas',
+                      'ultralytics'],
     package_data={'cobot_ai4robotics': ['resources/*.urdf', 
                                         'resources/projectiles/ycb_objects/*/*',
                                         'resources/cobot/*'
