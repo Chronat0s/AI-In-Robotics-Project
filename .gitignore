@@ -10,6 +10,6 @@
 # Ignore user specific conda files
 /.conda/
 
-# Ignore the camera data. Download it locally using camera_train.
+# Ignore the camera data. Download it locally using camera_train. ..
 /camera_data/
 /cobot-env/cobot_ai4robotics.egg-info/
