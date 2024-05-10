@@ -69,7 +69,7 @@ class CobotAI4RoboticsEnv(gym.Env):
         self.active_projectiles = []
 
         # Camera positioning and orientation.
-        self._cam_dist = 4.8
+        self._cam_dist = 6.5
         self._cam_yaw = 270
         self._cam_pitch = 0
 
@@ -198,10 +198,19 @@ class CobotAI4RoboticsEnv(gym.Env):
         # X   | 6   | 9   |
         # Y   | -3  | 3   |
         # Z   | 0.1   | 3   |
-        x = np.random.default_rng().uniform(4.0, 9.0, 1)[0]
-        y = np.random.default_rng().uniform(-1.5, 1.5, 1)[0]
-        z = np.random.default_rng().uniform(0.5, 2.0, 1)[0]
-
+        z_roll = np.random.default_rng().uniform(0, 1, 1)[0]
+        if z_roll >= 0.5: # Low ball, on the sides.
+            x = 9#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
+            y_roll = np.random.default_rng().uniform(0, 1, 1)[0]
+            if y_roll >= 0.5:
+                y = np.random.default_rng().uniform(0.3, 0.5, 1)[0]
+            else:
+                y = np.random.default_rng().uniform(-0.5, -0.3, 1)[0]
+            z = np.random.default_rng().uniform(self._h_table+0.25, self._h_table+0.6, 1)[0]
+        else: # High ball, free space.
+            x = 9#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
+            y = np.random.default_rng().uniform(-0.5, 0.5, 1)[0]
+            z = np.random.default_rng().uniform(self._h_table+0.6, 1.5, 1)[0]            
         init_pos = np.array([x,y,z])
 
         # Allow no more than 15 active objects at a time.
@@ -223,10 +232,10 @@ class CobotAI4RoboticsEnv(gym.Env):
 
         # Targeting.
         mass = .058 # Mass of the ball.
-        y_target = np.random.default_rng().uniform(-0.5, 0.5, 1)[0]
-        z_target = np.random.default_rng().uniform(0, 2, 1)[0]
-        target = np.array(self.cobot.base_position) + np.array([0,y_target,z_target])#np.array([0, y, z])
-
+        # y_target = np.random.default_rng().uniform(-0.5, 0.5, 1)[0]
+        # z_target = np.random.default_rng().uniform(0, 2, 1)[0]
+        # target = np.array(self.cobot.base_position) + np.array([0,y,z])#np.array([0, y, z])
+        target = np.array([self.cobot.base_position[0],y,z])
         # Direction and distance to target.
         duration = 0.1 # Duration to apply force for. Larger is slower, smaller is faster. May miss target if too slow with gravity.
 
@@ -314,8 +323,8 @@ class CobotAI4RoboticsEnv(gym.Env):
                 # print(int(box.cls), box.conf)
                 if int(box.cls) != 39: # Tennis ball
                     continue
-                # if box.conf < 0.65:
-                #     continue
+                if box.conf < 0.7:
+                    continue
 
                 b = box.xyxy[0]
 
@@ -362,7 +371,7 @@ class CobotAI4RoboticsEnv(gym.Env):
         closest_projectile_data = [] # Placeholders for no obstacle detected.
 
         # Update YOLO predictions every n steps.
-        if (self._envStepCounter % 20) == 0:
+        if (self._envStepCounter % 10) == 0:
             yolo_pred = self.getYOLOPrediction()
             if yolo_pred:
                 for index, (depth, box) in enumerate(yolo_pred):
