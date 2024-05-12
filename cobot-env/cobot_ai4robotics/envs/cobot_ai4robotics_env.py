@@ -98,6 +98,8 @@ class CobotAI4RoboticsEnv(gym.Env):
                 contact_points = p.getClosestPoints(self.cobot.kukaUid, projectile.id, distance = 0)
                 if contact_points:
                     print("Contact by ball no.", index, 'at point', f'({contact_points[0][5][0]:.2f}', f'{contact_points[0][5][1]:.2f}', f'{contact_points[0][5][2]:.2f})' , 'on KUKA.') 
+                    reward -= 50
+                    self.done = True
                     # [0][5] - one point on the KUKA, [0][6] - one point on the banana
 
                     # End episode if hit.
