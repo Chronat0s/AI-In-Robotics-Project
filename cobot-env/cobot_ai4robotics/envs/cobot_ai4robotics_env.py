@@ -83,29 +83,15 @@ class CobotAI4RoboticsEnv(gym.Env):
         ob = None # Placeholders until these functions get put in place.
         reward = 0
 
-
-        # Feed action to the car and get observation of car's state
-        # if (self._isDiscrete):
-        #     fwd = [-1, -1, -1, 0, 0, 0, 1, 1, 1]
-        #     steerings = [-0.6, 0, 0.6, -0.6, 0, 0.6, -0.6, 0, 0.6]
-        #     throttle = fwd[action]
-        #     steering_angle = steerings[action]
-        #     action = [throttle, steering_angle]
-        # self.car.apply_action(action)
-  
-        #action = np.random.uniform(self.cobot.ll, self.cobot.ul) # Random actions. Replace with DQN.
-
+        self.cobot.applyAction(action)
 
         for i in range(self._actionRepeat):
             if (self._envStepCounter % 40) == 0:
-                self.generateProjectile()          
-            self.cobot.applyAction(action)     
-            # self.clear_floor()
+                self.generateProjectile()            
             self._p.stepSimulation()
             self.current_frame = self.refreshImage()
-            # Observation space is [current pose, projectile yolo_pred data (closest n projectiles), xy to goal]
+            # Observation space is [current pose, projectile yolo_pred data (closest n projectiles)]
             ob = self.getObservation()
-            # print(ob)
 
             # Check for a hit and impose penalty (based on location?)
             for index, projectile in enumerate(self.active_projectiles):
@@ -114,30 +100,14 @@ class CobotAI4RoboticsEnv(gym.Env):
                     print("Contact by ball no.", index, 'at point', f'({contact_points[0][5][0]:.2f}', f'{contact_points[0][5][1]:.2f}', f'{contact_points[0][5][2]:.2f})' , 'on KUKA.') 
                     # [0][5] - one point on the KUKA, [0][6] - one point on the banana
 
+                    # End episode if hit.
+
             if self._renders:
                 time.sleep(self._timeStep)
             if self._termination():
                 self.done = True
                 break
             self._envStepCounter += 1
-
-        # Compute reward as L2 change in distance to goal
-        # dist_to_goal = math.sqrt(((car_ob[0] - self.goal[0]) ** 2 +
-                                   # (car_ob[1] - self.goal[1]) ** 2))
-        # dist_to_goal = math.sqrt(((carpos[0] - goalpos[0]) ** 2 +
-        #                           (carpos[1] - goalpos[1]) ** 2))
-        # reward = max(self.prev_dist_to_goal - dist_to_goal, 0)
-        # reward = -dist_to_goal
-        # self.prev_dist_to_goal = dist_to_goal
-
-        # Done by reaching goal
-        # if dist_to_goal < 1.5 and not self.reached_goal:
-        #     #print("reached goal")
-        #     self.done = True
-        #     self.reached_goal = True
-
-        # ob = car_ob
-
         
         return ob, reward, self.done, dict()
 
@@ -203,14 +173,17 @@ class CobotAI4RoboticsEnv(gym.Env):
             x = 9#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
             y_roll = np.random.default_rng().uniform(0, 1, 1)[0]
             if y_roll >= 0.5:
-                y = np.random.default_rng().uniform(0.25, 0.5, 1)[0]
+                y = np.random.default_rng().uniform(0.35, 0.5, 1)[0]
             else:
-                y = np.random.default_rng().uniform(-0.5, -0.25, 1)[0]
-            z = np.random.default_rng().uniform(self._h_table+0.25, self._h_table+0.6, 1)[0]
+                y = np.random.default_rng().uniform(-0.5, -0.35, 1)[0]
+            z = np.random.default_rng().uniform(self._h_table+0.05, self._h_table+0.45, 1)[0]
         else: # High ball, free space.
             x = 9#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
             y = np.random.default_rng().uniform(-0.5, 0.5, 1)[0]
-            z = np.random.default_rng().uniform(self._h_table+0.6, 1.5, 1)[0]            
+            z = np.random.default_rng().uniform(self._h_table+0.45, self._h_table+0.7, 1)[0]          
+        # x = 9
+        # y = 0.35
+        # z = self._h_table+0.7
         init_pos = np.array([x,y,z])
 
         # Allow no more than 15 active objects at a time.
@@ -384,6 +357,9 @@ class CobotAI4RoboticsEnv(gym.Env):
                     # print(depth, box.xyxyn[0])
                     # closest_projectile_data[(0+1*index):(4 + 1*index)] = box.xyxyn[0] # Spaghetti-ish code
                     # closest_projectile_data[(4 + 1 * index)] = depth
+            else:
+                closest_projectile_data = [-1,-1,-1,-1,-1]
+                self.old_projectile = closest_projectile_data
 
         if len(closest_projectile_data) == 0:
             closest_projectile_data = self.old_projectile
