@@ -33,11 +33,12 @@ class CobotAI4RoboticsEnv(gym.Env):
 
     def __init__(self, isDiscrete=True, renders=False):
         if (isDiscrete):
-            self.action_space = gym.spaces.Discrete(9)
+            # self.action_space = gym.spaces.Discrete(15) # Direct motor control.
+            self.action_space = gym.spaces.Discrete(9) # End effector xyz using IK.
         else:
             self.action_space = gym.spaces.box.Box(
-                low=np.array([-.967, -2, -2.96, 0.19, -2.96, -2.09, -3.05], dtype=np.float32)*1,
-                high=np.array([.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05], dtype=np.float32)*1)
+                low=np.array([-.967, -2, -2.96, 0.19, -2.96, -2.09, -3.05], dtype=np.float32),
+                high=np.array([.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05], dtype=np.float32))
         self.observation_space = gym.spaces.box.Box(
             # [Current pose, projectile data (closest n projectiles?), xy distance to end effector goal (if doing task)],
             low=np.array([-.967, -2, -2.96, 0.19, -2.96, -2.09, -3.05, -1, -1, -1, -1, -1], dtype=np.float32), # -1 means no obstacle. If there is an obstacle, it is between 0 and the normalised upper limit.
@@ -52,7 +53,7 @@ class CobotAI4RoboticsEnv(gym.Env):
 
         self.reached_goal = False
         self._timeStep = 0.01
-        self._actionRepeat = 10 # Time until next action.
+        self._actionRepeat = 5 # Time until next action.
         self._renders = renders
         self._isDiscrete = isDiscrete
         self.car = None
@@ -69,9 +70,9 @@ class CobotAI4RoboticsEnv(gym.Env):
         self.active_projectiles = []
 
         # Camera positioning and orientation.
-        self._cam_dist = 6.5
+        self._cam_dist = 7
         self._cam_yaw = 270
-        self._cam_pitch = 0
+        self._cam_pitch = -10
 
         # Load the YOLO model.
         self.YOLO = YOLO("./runs/detect/train4/weights/best.pt")
@@ -83,7 +84,29 @@ class CobotAI4RoboticsEnv(gym.Env):
         ob = None # Placeholders until these functions get put in place.
         reward = 0
 
-        self.cobot.applyAction(action)
+        # xyz, rpy
+        # 15 actions, 7 up, 7 down, 1 no change.
+        if self._isDiscrete:
+            # actions = np.array([1,1,1,1,1,1,1, -1, -1, -1, -1, -1, -1, -1, 0])*0.5
+            # motorIndex = [0,1,2,3,4,5,6,0,1,2,3,4,5,6,0]
+            # motorIndex = motorIndex[action]
+            # motorCommands = list(self.cobot.getPose())[0:7]
+            # # print(motorCommands)
+            # motorCommands[motorIndex] += actions[action]
+            # print(len(motorCommands), motorCommands)
+            # self.cobot.applyAction(motorCommands)
+            actions_d = [[1,0,0,0,0], # 0 - x up
+                   [0,1,0,0,0], # 1 - y up
+                   [0,0,1,0,0], # 2 - z up
+                   [-1,0,0,0,0], # 3 - x down
+                   [0,-1,0,0,0], # 4 - y down
+                   [0,0,-1,0,0], # 5 - z down
+                   [0,0,0,0,0], # 6 - no move
+                   [0,0,0,0,np.pi/6], # 7 - rotate end effector +
+                   [0,0,0,0,-np.pi/6]] # 8 - rotate end effector -
+            self.cobot.applyAction(actions_d[action])
+        else:
+            self.cobot.applyAction(action)
 
         for i in range(self._actionRepeat):
             if (self._envStepCounter % 40) == 0:
@@ -97,10 +120,16 @@ class CobotAI4RoboticsEnv(gym.Env):
             for index, projectile in enumerate(self.active_projectiles):
                 contact_points = p.getClosestPoints(self.cobot.kukaUid, projectile.id, distance = 0)
                 if contact_points:
-                    print("Contact by ball no.", index, 'at point', f'({contact_points[0][5][0]:.2f}', f'{contact_points[0][5][1]:.2f}', f'{contact_points[0][5][2]:.2f})' , 'on KUKA.') 
+                    if self._renders:
+                        print("Contact by ball no.", index, 'at point', f'({contact_points[0][5][0]:.2f}', f'{contact_points[0][5][1]:.2f}', f'{contact_points[0][5][2]:.2f})' , 'on KUKA.') 
                     # [0][5] - one point on the KUKA, [0][6] - one point on the banana
 
                     # End episode if hit.
+                    self.done = True
+                    reward = -50
+                    break
+                if self.done:
+                    break
 
             if self._renders:
                 time.sleep(self._timeStep)
@@ -141,6 +170,8 @@ class CobotAI4RoboticsEnv(gym.Env):
 
         self.old_projectile = [-1,-1,-1,-1,-1]
         ob = self.getObservation()
+        self.active_projectiles = []
+        self.done = False
 
         # Test obstacle generation
         # self.generateProjectile()
@@ -148,7 +179,7 @@ class CobotAI4RoboticsEnv(gym.Env):
         return np.array(ob, dtype=np.float32)
 
     def _termination(self):
-        return False #self._envStepCounter > 1000
+        return self._envStepCounter > 500
 
     def close(self):
         self._p.disconnect()
@@ -170,17 +201,17 @@ class CobotAI4RoboticsEnv(gym.Env):
         # Z   | 0.1   | 3   |
         z_roll = np.random.default_rng().uniform(0, 1, 1)[0]
         if z_roll >= 0.5: # Low ball, on the sides.
-            x = 9#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
+            x = 5#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
             y_roll = np.random.default_rng().uniform(0, 1, 1)[0]
             if y_roll >= 0.5:
                 y = np.random.default_rng().uniform(0.35, 0.5, 1)[0]
             else:
                 y = np.random.default_rng().uniform(-0.5, -0.35, 1)[0]
-            z = np.random.default_rng().uniform(self._h_table+0.05, self._h_table+0.45, 1)[0]
+            z = np.random.default_rng().uniform(self._h_table+0.05, self._h_table+0.4, 1)[0]
         else: # High ball, free space.
-            x = 9#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
+            x = 5#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
             y = np.random.default_rng().uniform(-0.5, 0.5, 1)[0]
-            z = np.random.default_rng().uniform(self._h_table+0.45, self._h_table+0.7, 1)[0]          
+            z = np.random.default_rng().uniform(self._h_table+0.3, self._h_table+0.7, 1)[0]          
         # x = 9
         # y = 0.35
         # z = self._h_table+0.7
@@ -357,9 +388,9 @@ class CobotAI4RoboticsEnv(gym.Env):
                     # print(depth, box.xyxyn[0])
                     # closest_projectile_data[(0+1*index):(4 + 1*index)] = box.xyxyn[0] # Spaghetti-ish code
                     # closest_projectile_data[(4 + 1 * index)] = depth
-            else:
-                closest_projectile_data = [-1,-1,-1,-1,-1]
-                self.old_projectile = closest_projectile_data
+            # else:
+            #     closest_projectile_data = [-1,-1,-1,-1,-1]
+            #     self.old_projectile = closest_projectile_data
 
         if len(closest_projectile_data) == 0:
             closest_projectile_data = self.old_projectile
