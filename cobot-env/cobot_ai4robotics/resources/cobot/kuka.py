@@ -15,12 +15,12 @@ class Kuka:
   def __init__(self, urdfRootPath=pybullet_data.getDataPath(), timeStep=0.01, base_position=[0,0,0]):
     self.urdfRootPath = urdfRootPath
     self.timeStep = timeStep
-    self.maxVelocity = .35
+    self.maxVelocity = 3#.35
     self.maxForce = 200.
     self.fingerAForce = 2
     self.fingerBForce = 2.5
     self.fingerTipForce = 2
-    self.useInverseKinematics = 0
+    self.useInverseKinematics = 1
     self.useSimulation = 1
     self.useNullSpace = 21
     self.useOrientation = 1
@@ -172,11 +172,12 @@ class Kuka:
                                   jointIndex=i,
                                   controlMode=p.POSITION_CONTROL,
                                   targetPosition=jointPoses[i],
-                                  targetVelocity=0,
+                                  # targetVelocity=0,
                                   force=self.maxForce,
                                   maxVelocity=self.maxVelocity,
-                                  positionGain=0.3,
-                                  velocityGain=1)
+                                  # positionGain=0.3,
+                                  # velocityGain=1
+                                  )
       else:
         #reset the joint state (ignoring all dynamics, not recommended to use during simulation)
         for i in range(self.numJoints):
