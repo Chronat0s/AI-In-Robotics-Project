@@ -45,7 +45,7 @@ class CobotAI4RoboticsEnv(gym.Env):
             high=np.array([.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05, 1, 1, 1, 1, 100], dtype=np.float32)) #
         self.np_random, _ = gym.utils.seeding.np_random()
 
-        self.goal_positions = {'left': -0.5, 'right': 0.5}  # Define target x positions
+        self.goal_positions = {'left': -0.7, 'right': 0.7}  # Define target x positions
         self.current_goal = 'left'  # Start by moving to the left
 
         # Make the GUI client or not.
@@ -194,7 +194,7 @@ class CobotAI4RoboticsEnv(gym.Env):
         return np.array(ob, dtype=np.float32)
 
     def _termination(self):
-        return self._envStepCounter > 500
+        return self._envStepCounter > 300
 
     def close(self):
         self._p.disconnect()
@@ -390,7 +390,7 @@ class CobotAI4RoboticsEnv(gym.Env):
         closest_projectile_data = [] # Placeholders for no obstacle detected.
 
         # Update YOLO predictions every n steps.
-        if (self._envStepCounter % 10) == 0:
+        if (self._envStepCounter % 15) == 0:
             yolo_pred = self.getYOLOPrediction()
             if yolo_pred:
                 for index, (depth, box) in enumerate(yolo_pred):
