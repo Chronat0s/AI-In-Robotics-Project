@@ -45,6 +45,9 @@ class CobotAI4RoboticsEnv(gym.Env):
             high=np.array([.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05, 1, 1, 1, 1, 100], dtype=np.float32)) #
         self.np_random, _ = gym.utils.seeding.np_random()
 
+        self.goal_positions = {'left': -0.5, 'right': 0.5}  # Define target x positions
+        self.current_goal = 'left'  # Start by moving to the left
+
         # Make the GUI client or not.
         if renders:
           self._p = bc.BulletClient(connection_mode=p.GUI)
@@ -116,6 +119,14 @@ class CobotAI4RoboticsEnv(gym.Env):
             # Observation space is [current pose, projectile yolo_pred data (closest n projectiles)]
             ob = self.getObservation()
 
+            # Check if the goal is reached and update the goal
+            end_effector_x = self.cobot.getPose()[0]  # Assuming this gets the x position of the end effector
+            goal_x = self.goal_positions[self.current_goal]
+
+            if (self.current_goal == 'left' and end_effector_x <= goal_x) or (self.current_goal == 'right' and end_effector_x >= goal_x):
+                reward += 10  # Reward for reaching the goal
+                self.current_goal = 'right' if self.current_goal == 'left' else 'left'  # Switch goal
+
             # Check for a hit and impose penalty (based on location?)
             for index, projectile in enumerate(self.active_projectiles):
                 contact_points = p.getClosestPoints(self.cobot.kukaUid, projectile.id, distance = 0)
@@ -134,6 +145,7 @@ class CobotAI4RoboticsEnv(gym.Env):
             if self._renders:
                 time.sleep(self._timeStep)
             if self._termination():
+                reward += 50
                 self.done = True
                 break
             self._envStepCounter += 1
@@ -175,6 +187,9 @@ class CobotAI4RoboticsEnv(gym.Env):
 
         # Test obstacle generation
         # self.generateProjectile()
+
+        #Set a goal
+        self.current_goal = 'left'
 
         return np.array(ob, dtype=np.float32)
 
