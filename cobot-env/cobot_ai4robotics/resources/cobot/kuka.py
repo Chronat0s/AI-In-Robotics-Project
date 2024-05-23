@@ -15,8 +15,8 @@ class Kuka:
   def __init__(self, urdfRootPath=pybullet_data.getDataPath(), timeStep=0.01, base_position=[0,0,0]):
     self.urdfRootPath = urdfRootPath
     self.timeStep = timeStep
-    self.maxVelocity = 3#.35
-    self.maxForce = 200.
+    self.maxVelocity = 3.5#.35
+    self.maxForce = 2000.
     self.fingerAForce = 2
     self.fingerBForce = 2.5
     self.fingerTipForce = 2
@@ -89,9 +89,9 @@ class Kuka:
   def getObservationDimension(self):
     return len(self.getObservation())
 
-  def getObservation(self):
+  def getObservation(self, link=7):
     observation = []
-    state = p.getLinkState(self.kukaUid, self.kukaGripperIndex)
+    state = p.getLinkState(self.kukaUid, link)
     pos = state[0]
     orn = state[1]
     euler = p.getEulerFromQuaternion(orn)
@@ -175,8 +175,8 @@ class Kuka:
                                   # targetVelocity=0,
                                   force=self.maxForce,
                                   maxVelocity=self.maxVelocity,
-                                  # positionGain=0.3,
-                                  # velocityGain=1
+                                  positionGain=0.3,
+                                  velocityGain=1
                                   )
       else:
         #reset the joint state (ignoring all dynamics, not recommended to use during simulation)
