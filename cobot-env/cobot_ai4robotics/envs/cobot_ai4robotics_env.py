@@ -487,7 +487,7 @@ class CobotAI4RoboticsEnv(gym.Env):
         projectilePos = None
 
         # Update YOLO predictions every n steps.
-        if ((self._envStepCounter % 1) == 0):
+        if ((self._envStepCounter % 10) == 0):
             if ((self.debug == 2) | (self.debug == 3)): # If training the DQN, don't use YOLO as it is slow. Use simulation.
                 if len(self.active_projectiles) == 0:
                     cobot_obs = 100 # No obstacle.
