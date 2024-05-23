@@ -42,8 +42,8 @@ class CobotAI4RoboticsEnv(gym.Env):
                 high=np.array([.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05], dtype=np.float32))
         self.observation_space = gym.spaces.box.Box(
             # [Current pose, projectile data (closest n projectiles?), xy distance to end effector goal (if doing task)],
-            low=np.array([-40, -40], dtype=np.float32), # 0 - distance to nearest obstacle. 1 - distance to goal.
-            high=np.array([40, 40], dtype=np.float32)) #
+            low=np.array([-40, -40, 40], dtype=np.float32), # 0 - distance to nearest obstacle. 1 - distance to goal. 2- distance to table.
+            high=np.array([40, 40, 40], dtype=np.float32)) #
             # low=np.array([-.967, -2, -2.96, 0.19, -2.96, -2.09, -3.05, -1, -1, -1, -1, -1], dtype=np.float32), # -1 means no obstacle. If there is an obstacle, it is between 0 and the normalised upper limit.
             # high=np.array([.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05, 1, 1, 1, 1, 100], dtype=np.float32)) #
         self.np_random, _ = gym.utils.seeding.np_random()
@@ -526,8 +526,12 @@ class CobotAI4RoboticsEnv(gym.Env):
         # Get the end effector distance to goal.
         goalDistance = np.linalg.norm(np.array(self.cobot.getObservation()[0:3]) - self.goal)
 
+        # Get z distance to table.
+        tableDistance = np.abs(np.array(self.cobot.getObservation()[2]) - self._h_table+0.08)
+
         observation.append(cobot_obs)
         observation.append(goalDistance)
+        observation.append(tableDistance)
         self.old_cobot_obs = cobot_obs
         # observation.extend(list(closest_projectile_data))
         # print("Observation: ", observation)
