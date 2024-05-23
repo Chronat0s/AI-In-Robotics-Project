@@ -3,89 +3,166 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
-    <title> AI In Robotics Project </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI In Robotics Project</title>
     <link rel="shortcut icon" type="image/jpg" href="./images/small-profile.jpeg">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        
+        .section img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px;
+        }
+        
+        .text-section {
+            text-align: center;
+            padding: 20px;
+            background-size: cover;
+        }
+        
+        .text-section img {
+            height: 150px;
+            border-radius: 50%;
+            border: 10px solid #FEDE00;
+            margin-bottom: 20px;
+        }
+        
+        .text-section h1 {
+            font-size: 2.5rem;
+            color: black;
+            margin: 10px;
+        }
+        
+        .text-section p {
+            font-size: 1.25rem;
+            color: black;
+        }
+        
+        h1 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .content-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        
+        .content-section img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px;
+        }
+        
+        .content-section div {
+            max-width: 1200px;
+            margin: 20px;
+        }
+        
+        .content-section p {
+            line-height: 1.6;
+            font-size: 1rem;
+            padding: 20px;
+        }
+        
+        iframe {
+            width: 100%;
+            height: auto;
+            max-width: 1120px;
+            margin: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .text-section h1 {
+                font-size: 3rem;
+            }
+            .content-section p {
+                font-size: 1.25rem;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .text-section h1 {
+                font-size: 4rem;
+            }
+            .content-section p {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 
-<body style="margin:0;" data-new-gr-c-s-check-loaded="14.1172.0" data-gr-ext-installed="">
-    <!--Second section-->
-    <div style="display: flex; justify-content: center; align-items: center;">
-        <img src="./images/kuka.jpg" style="height:600px; margin:100px;
-        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
-        coat.">
-        <div style="background-image: url(&#39;images/background.jpg&#39;);
-      background-size: cover; height:600px; padding-top:80px;
-      text-align:center;">
-            <img src="./images/small-profile.jpeg" style="height:150px; border-radius:
-        50%; border: 10px solid #FEDE00;" alt="Digital Ocean’s mascot, a blue
-        smiling shark.">
-            <h1 style="font-size:100px; color:black; margin:10px;">AI in Robotics Group 8
-            </h1>
-            <p style="font-size:30px; color: black;"><em>Damian Sue 13900156<br />
-          Morne
-          Kruger 13926757<br />Yara
-          Fakoua 13914510<br />Iraklis Roussos 13699956</em></p>
+<body>
+    <!-- Second section -->
+    <div class="section">
+        <img src="./images/kuka.jpg" style="height: 600px;" alt="KUKA robot arm">
+        <div class="text-section" style="background-image: url('images/background.jpg'); height: 600px;">
+            <img src="./images/small-profile.jpeg" alt="Group member profile picture">
+            <h1>AI in Robotics Group 8</h1>
+            <p><em>Damian Sue 13900156<br />
+          Morne Kruger 13926757<br />Yara Fakoua 13914510<br />Iraklis Roussos
+          13699956</em></p>
         </div>
     </div>
-    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px;">
-        Problem Scenario</h1>
-    <div style="display: flex; justify-content: center; align-items: center;">
-        <img src="./images/problem_scenario.jpg" style="width: 50%; height:auto; margin:100px;
-        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
-        coat.">
-        <div style=" display: flex; justify-content: center; align-items: center; height:600px; margin:100px;">
-            <p style="line-height: 2.0; font-size:20px;">Our problem scenario is defined by three characterisations: the challenge, the objective, and the approach. The challenge is that robots currently operate in dynamic environments and must avoid potential collisions that could cause injury
-                or damage equipment. Our objective, therefore, is to develop a collision avoidance system that uses reinforcement learning to train a robot arm to navigate safely in these dynamic environments. The approach involves utilising an RGB and
-                depth camera to provide real-time input of thrown tennis balls, enabling the robot arm to avoid these obstacles.
-            </p>
-        </div>
-    </div>
-    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px;">
-        Problem Solution</h1>
-    <div style="display: flex; justify-content: center; align-items: center;">
-        <img src="./images/solution_flowchart.jpg " style="width: 50%; height:auto; margin:100px;
-        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
-        coat.">
-        <div style="height:600px; margin:100px;">
-            <p style="line-height: 2.0; font-size:20px;">The flow diagram illustrates the solution to our problem scenario, where an RGB and depth camera provide real-time visual input of tennis balls being thrown at a robotic arm. Using the RGB camera, we employed YOLO to capture various colour
-                variations and utilised these features for object detection. We then trained the model to recognise incoming obstacles and predict their bounding boxes. The depth camera served as input for the deep Q-learning model, which, using the predicted
-                bounding boxes, enabled the robot arm to learn the optimal positions to avoid the incoming tennis balls.
-            </p>
-        </div>
-    </div>
-    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px;">
-        Environment</h1>
-    <div style="display: flex; justify-content: center; align-items: center;">
-        <img src="./images/Environment.png" style="width: 50%; height:auto; margin:100px;
-        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
-        coat.">
-        <div style="height:600px; margin:100px;">
-            <p style="line-height: 2.0; font-size:20px;">The environment for our mission consists of a 7-degree-of-freedom KUKA LBR iiwa robotic arm mounted on a table within a Pybullet simulation. Seven-times-upscaled tennis balls move towards the robot's workspace from random positions. A synthetic
-                RGB-D and depth camera is positioned to view the workspace and the incoming tennis balls, allowing the arm to detect and dodge these objects. Robot control was achieved using the pybullet-robot-envs repository from <a href="https://github.com/hsp-iit/pybullet-robot-envs.git"
-                    target="_blank">GitHub</a>.
-            </p>
-        </div>
-    </div>
-    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px;">
-        YOLOv8</h1>
-    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; height: 100vh;">
 
-        <img src="./images/yolo_graph1.jpg" style="max-width: 100%; height:auto;
-        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
-        coat.">
-        <img src="./images/yolo_graph2.jpg" style="max-width: 100%; height:auto; 
-        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
-        coat.">
-        <img src="./images/yolo_graph3.jpg" style="max-width: 100%; height:auto;
-        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
-        coat.">
+    <h1>Problem Scenario</h1>
+    <div class="content-section">
+        <img src="./images/problem_scenario.jpg" alt="Problem scenario image">
+        <div>
+            <p>Our problem scenario is defined by three characterisations: the challenge, the objective, and the approach. The challenge is that robots currently operate in dynamic environments and must avoid potential collisions that could cause injury
+                or damage equipment. Our objective, therefore, is to develop a collision avoidance system that uses reinforcement learning to train a robot arm to navigate safely in these dynamic environments. The approach involves utilising an RGB and
+                depth camera to provide real-time input of thrown tennis balls, enabling the robot arm to avoid these obstacles.</p>
+        </div>
     </div>
-    <div>
-        <div style="display: flex; justify-content: center; align-items: center; width: 100%; flex-direction: column; ">
-            <p style="margin: 0 200px 0 200px; line-height: 2.0; font-size:20px; ">
-                YOLO version 8 or You Only Look Once is a computer vision model developed by Ultralytics for the purpose of real-time image and video processing. It offers a short response time for detection, classification, and segmentation problems, which made it a
-                good candidate for use in our project for tracking projectiles in real-time.
+
+    <h1>Problem Solution</h1>
+    <div class="content-section">
+        <img src="./images/solution_flowchart.jpg" alt="Solution flowchart image">
+        <div>
+            <p>The flow diagram illustrates the solution to our problem scenario, where an RGB and depth camera provide real-time visual input of tennis balls being thrown at a robotic arm. Using the RGB camera, we employed YOLO to capture various colour
+                variations and utilised these features for object detection. We then trained the model to recognise incoming obstacles and predict their bounding boxes. The depth camera served as input for the deep Q-learning model, which, using the predicted
+                bounding boxes, enabled the robot arm to learn the optimal positions to avoid the incoming tennis balls.</p>
+        </div>
+    </div>
+
+    <h1>Environment</h1>
+    <div class="content-section">
+        <img src="./images/Environment.png" alt="Environment image">
+        <div>
+            <p>The environment for our mission consists of a 7-degree-of-freedom KUKA LBR iiwa robotic arm mounted on a table within a Pybullet simulation. Seven-times-upscaled tennis balls move towards the robot's workspace from random positions. A synthetic
+                RGB-D and depth camera is positioned to view the workspace and the incoming tennis balls, allowing the arm to detect and dodge these objects. Robot control was achieved using the pybullet-robot-envs repository from <a href="https://github.com/hsp-iit/pybullet-robot-envs.git"
+                    target="_blank">GitHub</a>.</p>
+        </div>
+    </div>
+
+    <h1>YOLOv8</h1>
+    <div class="content-section">
+        <img src="./images/yolo_graph1.jpg" alt="YOLOv8 graph 1">
+        <img src="./images/yolo_graph2.jpg" alt="YOLOv8 graph 2">
+        <img src="./images/yolo_graph3.jpg" alt="YOLOv8 graph 3">
+        <div>
+            <p>YOLO version 8 or You Only Look Once is a computer vision model developed by Ultralytics for the purpose of real-time image and video processing. It offers a short response time for detection, classification, and segmentation problems, which
+                made it a good candidate for use in our project for tracking projectiles in real-time.
                 <br /><br /> Utilising the Open Images v7 Dataset, which contains approximately 16 million images across 600 classes <a href="https://storage.googleapis.com/openimages/web/visualizer/index.html?type=detection&set=train&c=%2Fm%2F05ctyq"
                     target="_blank">see here</a>, we downloaded around 400 annotated images of tennis balls and organised them into training, validation, and test sets using a script.
                 <br /><br /> Initially, we began with a detection model pre-trained on the entire Open Images v7 Dataset. During training, the loss for both boxes and classes consistently trended downwards, though the validation loss was not perfect.
@@ -95,56 +172,22 @@
             </p>
         </div>
     </div>
-    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px; ">
-        DQN</h1>
-    <div style="display: flex; justify-content: center; align-items: center; ">
-        <img src="./images/DQN_graph1.jpg " style="width: auto; height:auto; margin:100px; float: left; " alt="A pretend invisible person wearing a hat, glasses, and coat. ">
-        <div style="width: 50%; ">
-            <p style="line-height: 2.0; font-size:20px; ">The robot determines its movements using a DQN model, which takes as input the joint angles, the bounding box of the nearest tennis ball, and its depth information. This DQN model features two hidden layers with 256 nodes each. The output
+
+    <h1>DQN</h1>
+    <div class="content-section">
+        <img src="./images/DQN_graph1.jpg" alt="DQN graph">
+        <div>
+            <p>The robot determines its movements using a DQN model, which takes as input the joint angles, the bounding box of the nearest tennis ball, and its depth information. This DQN model features two hidden layers with 256 nodes each. The output
                 of the DQN is an end effector movement command, which is then used in conjunction with inverse kinematics to calculate the necessary joint angles for the robot to avoid obstacles.
             </p>
         </div>
     </div>
 
-    <!--Footer-->
-    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px; ">
-        Demo</h1>
-    <div style="height:auto; display: flex; align-items: center; justify-content: center; ">
-        <iframe width="1120 " height="630 " src="https://www.youtube.com/embed/IYnsfV5N2n8 " frameborder="0 " allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture " allowfullscreen ">
-        </iframe>
+    <!-- Footer -->
+    <h1>Demo</h1>
+    <div class="section">
+        <iframe src="https://www.youtube.com/embed/IYnsfV5N2n8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
     </div>
-
-
-
-
-
 </body>
-<grammarly-desktop-integration data-grammarly-shadow-root=" true "><template shadowrootmode=" open ">
-    <style>
-      div.grammarly-desktop-integration {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-        -moz-user-select: none;
-        -webkit-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-      }
-
-      div.grammarly-desktop-integration:before {
-        content: attr(data-content);
-      }
-    </style>
-    <div aria-label=" grammarly-integration " role=" group " tabindex=" -1 "
-      class=" grammarly-desktop-integration "
-      data-content=" {&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false} ">
-    </div>
-  </template></grammarly-desktop-integration>
 
 </html>
