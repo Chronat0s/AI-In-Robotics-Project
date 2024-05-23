@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- saved from url=(0029)https://html.sammy-codes.com/ -->
 <html lang="en">
 
 <head>
@@ -2275,37 +2274,109 @@
 </head>
 
 <body style="margin:0;" data-new-gr-c-s-check-loaded="14.1172.0" data-gr-ext-installed="">
-
-    <!--First section-->
-    <div style="background-image: url(&#39;images/background.jpg&#39;);
-      background-size: cover; height:480px; padding-top:80px;
+    <!--Second section-->
+    <div style="display: flex; justify-content: center; align-items: center;">
+        <img src="./images/kuka.jpg" style="height:600px; margin:100px;
+        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
+        coat.">
+        <div style="background-image: url(&#39;images/background.jpg&#39;);
+      background-size: cover; height:600px; padding-top:80px;
       text-align:center;">
-        <img src="./images/small-profile.jpeg" style="height:150px; border-radius:
+            <img src="./images/small-profile.jpeg" style="height:150px; border-radius:
         50%; border: 10px solid #FEDE00;" alt="Digital Ocean’s mascot, a blue
         smiling shark.">
-        <h1 style="font-size:100px; color:black; margin:10px;">AI in Robotics Group 8
-        </h1>
-        <p style="font-size:30px; color: black;"><em>Damian Sue 13900156<br /> Morne
-        Kruger 13926757<br />Yara
-        Fakoua 13914510<br />Iraklis Roussos 13699956</em></p>
+            <h1 style="font-size:100px; color:black; margin:10px;">AI in Robotics Group 8
+            </h1>
+            <p style="font-size:30px; color: black;"><em>Damian Sue 13900156<br />
+          Morne
+          Kruger 13926757<br />Yara
+          Fakoua 13914510<br />Iraklis Roussos 13699956</em></p>
+        </div>
     </div>
+    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px;">
+        Problem Scenario</h1>
+    <div style="display: flex; justify-content: center; align-items: center;">
+        <img src="./images/problem_scenario.jpg" style="width: 50%; height:auto; margin:100px;
+        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
+        coat.">
+        <div style=" display: flex; justify-content: center; align-items: center; height:600px; margin:100px;">
+            <p style="line-height: 2.0; font-size:20px;">Our problem scenario is defined by three characterisations: the challenge, the objective, and the approach. The challenge is that robots currently operate in dynamic environments and must avoid potential collisions that could cause injury
+                or damage equipment. Our objective, therefore, is to develop a collision avoidance system that uses reinforcement learning to train a robot arm to navigate safely in these dynamic environments. The approach involves utilising an RGB and
+                depth camera to provide real-time input of thrown tennis balls, enabling the robot arm to avoid these obstacles.
+            </p>
+        </div>
+    </div>
+    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px;">
+        Problem Solution</h1>
+    <div style="display: flex; justify-content: center; align-items: center;">
+        <img src="./images/solution_flowchart.jpg " style="width: 50%; height:auto; margin:100px;
+        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
+        coat.">
+        <div style="height:600px; margin:100px;">
+            <p style="line-height: 2.0; font-size:20px;">The flow diagram illustrates the solution to our problem scenario, where an RGB and depth camera provide real-time visual input of tennis balls being thrown at a robotic arm. Using the RGB camera, we employed YOLO to capture various colour
+                variations and utilised these features for object detection. We then trained the model to recognise incoming obstacles and predict their bounding boxes. The depth camera served as input for the deep Q-learning model, which, using the predicted
+                bounding boxes, enabled the robot arm to learn the optimal positions to avoid the incoming tennis balls.
+            </p>
+        </div>
+    </div>
+    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px;">
+        Environment</h1>
+    <div style="display: flex; justify-content: center; align-items: center;">
+        <img src="./images/Environment.png" style="width: 50%; height:auto; margin:100px;
+        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
+        coat.">
+        <div style="height:600px; margin:100px;">
+            <p style="line-height: 2.0; font-size:20px;">The environment for our mission consists of a 7-degree-of-freedom KUKA LBR iiwa robotic arm mounted on a table within a Pybullet simulation. Seven-times-upscaled tennis balls move towards the robot's workspace from random positions. A synthetic
+                RGB-D and depth camera is positioned to view the workspace and the incoming tennis balls, allowing the arm to detect and dodge these objects. Robot control was achieved using the pybullet-robot-envs repository from <a href="https://github.com/hsp-iit/pybullet-robot-envs.git"
+                    target="_blank">GitHub</a>.
+            </p>
+        </div>
+    </div>
+    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px;">
+        YOLOv8</h1>
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; height: 100vh;">
 
-    <!--Second section-->
-    <img src="./images/kuka.jpg" style="height:600px; margin:100px;
-      float: left;" alt="A pretend invisible person wearing a hat, glasses, and
-      coat.">
-    <div style="height:600px; margin:100px;">
-        <h1>Hello </h1>
-        <p style="line-height: 2.0; font-size:20px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Et magnis dis parturient montes nascetur ridiculus mus. Purus semper eget duis at tellus at urna condimentum mattis. Turpis
-            in eu mi bibendum neque egestas. Rhoncus dolor purus non enim praesent elementum facilisis. Ipsum nunc aliquet bibendum enim facilisis gravida. Cursus turpis sa tincidunt dui ut ornare lectus. Enim nec dui nunc mattis enim ut. Sapien nec sagittis
-            aliquam malesuada bibendum arcu vitae elementum curabitur. Tussa ultricies mi quis hendrerit dolor magna. Elit eget gravida cum sociis natoque penatibus et magnis dis. Enim tortor at auctor urna nunc id cursus metus.
-        </p>
-        <p style="line-height: 2.0; font-size:20px;">Email me at <a href="mailto:Sammy@SampleEmail.com">Sammy@SampleEmail.com </a></p>
+        <img src="./images/yolo_graph1.jpg" style="max-width: 100%; height:auto;
+        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
+        coat.">
+        <img src="./images/yolo_graph2.jpg" style="max-width: 100%; height:auto; 
+        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
+        coat.">
+        <img src="./images/yolo_graph3.jpg" style="max-width: 100%; height:auto;
+        float: left;" alt="A pretend invisible person wearing a hat, glasses, and
+        coat.">
+    </div>
+    <div>
+        <div style="display: flex; justify-content: center; align-items: center; width: 100%; flex-direction: column; ">
+            <p style="margin: 0 200px 0 200px; line-height: 2.0; font-size:20px; ">
+                YOLO version 8 or You Only Look Once is a computer vision model developed by Ultralytics for the purpose of real-time image and video processing. It offers a short response time for detection, classification, and segmentation problems, which made it a
+                good candidate for use in our project for tracking projectiles in real-time.
+                <br /><br /> Utilising the Open Images v7 Dataset, which contains approximately 16 million images across 600 classes <a href="https://storage.googleapis.com/openimages/web/visualizer/index.html?type=detection&set=train&c=%2Fm%2F05ctyq"
+                    target="_blank">see here</a>, we downloaded around 400 annotated images of tennis balls and organised them into training, validation, and test sets using a script.
+                <br /><br /> Initially, we began with a detection model pre-trained on the entire Open Images v7 Dataset. During training, the loss for both boxes and classes consistently trended downwards, though the validation loss was not perfect.
+                Our primary focus was on accurately detecting tennis balls. A confusion matrix would help assess the model's performance in this specific task.
+                <br /><br /> The model reliably predicts tennis balls correctly, and the other classes, which are not of interest, are mostly dismissed as background, not affecting the model's implementation. This accuracy was visually confirmed on the
+                test dataset and within the Pybullet environment.
+            </p>
+        </div>
+    </div>
+    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px; ">
+        DQN</h1>
+    <div style="display: flex; justify-content: center; align-items: center; ">
+        <img src="./images/DQN_graph1.jpg " style="width: auto; height:auto; margin:100px; float: left; " alt="A pretend invisible person wearing a hat, glasses, and coat. ">
+        <div style="width: 50%; ">
+            <p style="line-height: 2.0; font-size:20px; ">The robot determines its movements using a DQN model, which takes as input the joint angles, the bounding box of the nearest tennis ball, and its depth information. This DQN model features two hidden layers with 256 nodes each. The output
+                of the DQN is an end effector movement command, which is then used in conjunction with inverse kinematics to calculate the necessary joint angles for the robot to avoid obstacles.
+            </p>
+        </div>
     </div>
 
     <!--Footer-->
-    <div style="height:auto; display: flex; align-items: center; justify-content: center;">
-        <iframe width="1120" height="630" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen "></iframe>
+    <h1 style="display: flex; justify-content: center; align-items: center; font-size: 72px; ">
+        Demo</h1>
+    <div style="height:auto; display: flex; align-items: center; justify-content: center; ">
+        <iframe width="1120 " height="630 " src="https://www.youtube.com/embed/IYnsfV5N2n8 " frameborder="0 " allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture " allowfullscreen ">
+        </iframe>
     </div>
 
 
@@ -2313,33 +2384,32 @@
 
 
 </body>
-<grammarly-desktop-integration data-grammarly-shadow-root=" true "><template
-        shadowrootmode=" open ">
-        <style>
-          div.grammarly-desktop-integration {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-            -moz-user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-          }
+<grammarly-desktop-integration data-grammarly-shadow-root=" true "><template shadowrootmode=" open ">
+    <style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
 
-          div.grammarly-desktop-integration:before {
-            content: attr(data-content);
-          }
-        </style>
-        <div aria-label=" grammarly-integration " role=" group " tabindex=" -1 "
-          class=" grammarly-desktop-integration "
-          data-content=" {&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false} ">
-        </div>
-      </template></grammarly-desktop-integration>
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style>
+    <div aria-label=" grammarly-integration " role=" group " tabindex=" -1 "
+      class=" grammarly-desktop-integration "
+      data-content=" {&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false} ">
+    </div>
+  </template></grammarly-desktop-integration>
 
 </html>
