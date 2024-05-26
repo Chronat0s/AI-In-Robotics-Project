@@ -120,7 +120,7 @@ class CobotAI4RoboticsEnv(gym.Env):
             dz = [0, 0, 0, 0, 0, -dv, dv][action]
             da = [0, 0, 0, 0, 0, -0.05, 0.05][action]
             f = 0.3
-            realAction = [dx, dy, dz, da, f] # Disable z movement.
+            realAction = [dx, dy, dz, 0, 0] # Disable z movement.
 
             self.cobot.applyAction(realAction)
 
