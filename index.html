@@ -71,7 +71,6 @@
         .content-section img {
             max-width: 100%;
             height: auto;
-            margin: 20px;
         }
         
         .content-section div {
@@ -80,6 +79,12 @@
         }
         
         .content-section p {
+            line-height: 1.6;
+            font-size: 1rem;
+            padding: 20px;
+        }
+        
+        .content-section ul {
             line-height: 1.6;
             font-size: 1rem;
             padding: 20px;
@@ -130,8 +135,9 @@
             <img src="./images/small-profile.jpeg" alt="Group member profile picture">
             <h1>AI in Robotics Group 8</h1>
             <p><em>Damian Sue 13900156<br />
-          Morne Kruger 13926757<br />Yara Fakoua 13914510<br />Iraklis Roussos
-          13699956</em></p>
+                    Morne Kruger 13926757<br />Yara Fakoua 13914510<br />Iraklis
+                    Roussos
+                    13699956</em></p>
         </div>
         <img src="./images/kuka.jpg" style="height: 600px;" alt="KUKA robot arm">
     </div>
@@ -186,11 +192,18 @@
 
     <h1>DQN</h1>
     <div class="content-section">
-        <img src="./images/DQN_graph1.jpg" alt="DQN graph">
+        <img src="./images/DQN_graph1.jpg" style="max-width: calc(100/3);" alt="DQN graph">
+        <img src="./images/DQN Results 1.png" style="max-width: calc(100/3);" alt="DQN Results 1">
+        <img src="./images/DQN Results 2.png" style="max-width: calc(100/3);" alt="DQN Results 2">
         <div>
-            <p>In our project, we utilise a Deep Q-Network (DQN) to enable the robotic arm to make informed movement decisions. The DQN model is essential for the robot's decision-making process, allowing it to learn and improve over time through interaction with the environment. The inputs to the DQN include the end effector's position and the distance to the nearest tennis ball, which help the robot understand its current state and the proximity of obstacles. The DQN architecture comprises two hidden layers with 256 nodes each, enabling the model to process these inputs effectively and learn the optimal actions to avoid collisions. The output of the DQN is an end effector movement command, which is then used alongside inverse kinematics to calculate the necessary joint angles for the robot to avoid obstacles. Essentially, the DQN model functions as the brain of our collision avoidance system, guiding the robot to navigate its environment safely in real-time.
-               <br /><br /> The graphs shown illustrate the results of various training runs, where the x-axis represents the episodes and the y-axis represents the reward obtained. On the left, we see the initial run, and on the right is our most recent episode versus reward graph. In the initial version, the DQN learned that placing the end effector straight down on the table maximized the reward, which was effective for avoiding projectiles but not practical.
-               <br /><br /> In subsequent versions, we refined the observations and introduced penalties and rewards for specific actions. This led to the DQN learning more balanced strategies for avoiding projectiles while maintaining an optimal position. The improvements can be seen in the increased number of positive reward episodes, indicating a more effective collision avoidance strategy.
+            <p>In our project, we utilise a Deep Q-Network (DQN) to enable the robotic arm to make informed movement decisions. The DQN model is essential for the robot's decision-making process, allowing it to learn and improve over time through interaction
+                with the environment. The inputs to the DQN include the end effector's position and the distance to the nearest tennis ball, which help the robot understand its current state and the proximity of obstacles. The DQN architecture comprises
+                two hidden layers with 256 nodes each, enabling the model to process these inputs effectively and learn the optimal actions to avoid collisions. The output of the DQN is an end effector movement command, which is then used alongside inverse
+                kinematics to calculate the necessary joint angles for the robot to avoid obstacles. Essentially, the DQN model functions as the brain of our collision avoidance system, guiding the robot to navigate its environment safely in real-time.
+                <br /><br /> The graphs shown illustrate the results of various training runs, where the x-axis represents the episodes and the y-axis represents the reward obtained. On the left, we see the initial run, and on the right is our most recent
+                episode versus reward graph. In the initial version, the DQN learned that placing the end effector straight down on the table maximized the reward, which was effective for avoiding projectiles but not practical.
+                <br /><br /> In subsequent versions, we refined the observations and introduced penalties and rewards for specific actions. This led to the DQN learning more balanced strategies for avoiding projectiles while maintaining an optimal position.
+                The improvements can be seen in the increased number of positive reward episodes, indicating a more effective collision avoidance strategy.
             </p>
         </div>
     </div>
@@ -199,8 +212,84 @@
     <h1>Demo Video</h1>
     <div class="section">
         <div class="video-wrapper">
-            <iframe src="https://youtu.be/rsxKn5gjGoo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <iframe src="https://www.youtube.com/embed/rsxKn5gjGoo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
+    </div>
+    <div class="content-section" style="display: flex; justify-content: center; align-items: center; flex-direction: column; max-width: 1400px; padding: 20px; margin: 0 auto;">
+        <h1>Development:</h1>
+        <h2>Environment: </h2>
+        <p>Some compromises were made to simplify the environment when compared with a theoretical real-world counterpart: </p>
+        <ol style="font-size: 1.5rem;">
+            <li>
+                Only one type of projectile (tennis balls) would be used for a simpler computer vision task.
+            </li>
+            <li>
+                The tennis balls would be upscaled to increase visibility at lower resolutions to the YOLO model. This allowed the simulation to run faster instead of rendering a high resolution RGBD image every step.
+            </li>
+            <li>
+                To assist with a meaningful reward scheme, projectiles would not be targeting areas on the robot where it cannot move and therefore avoid damage (the robot’s base and first link). </li>
+        </ol>
+        <p>The KUKA and table models were taken from the PyBullet library.
+            <br /> <br /> Obstacle models were taken from pybullet-object-models on
+            <a href="https://github.com/eleramp/pybullet-object-models/tree/master" target="_blank">Github</a>.<br /><br /> Control of the KUKA arm was achieved using code from pybullet-robot-envs on <a href="https://github.com/hsp-iit/pybullet-robot-envs"
+                target="_blank">Github</a>.
+        </p>
+        <h2>YOLO:</h2>
+        <p>After selecting YOLO for the project, we built our dataset of tennis ball images and found a model pre-trained on a larger dataset which we could fine-tune. <br /><br /> Annotated images of tennis balls were taken from the Open Images Dataset
+            v7. An example of these can be found at this link: <a href="https://storage.googleapis.com/openimages/web/visualizer/index.html?type=detection&set=train&c=%2Fm%2F05ctyq " target="_blank">https://storage.googleapis.com/openimages/web/visualizer/index.html?type=detection&set=train&c=%2Fm%2F05ctyq
+            </a> <br /><br /> The FiftyOne library was used to download and format the desired annotated images into training, test, and validation sets. A .yaml file was also generated for YOLO to read the dataset. A guide for this can be found here:
+            <a href="https://docs.voxel51.com/user_guide/export_datasets.html#yolov5dataset " target="_blank">https://docs.voxel51.com/user_guide/export_datasets.html#yolov5dataset</a>
+            <br /><br /> Pretrained models on the entire Open Images V7 dataset can be found here: <a href="https://docs.ultralytics.com/datasets/detect/open-images-v7/">https://docs.ultralytics.com/datasets/detect/open-images-v7/</a>. The basic YOLOv8n
+            was used.
+        </p>
+        <h2>DQN:</h2>
+        <p>Several rounds of training using a Pybullet simulation were performed to iteratively improve upon and find suitable hyperparameters as well as a reward scheme for the robot. During development, there were three major changes to how rewards were
+            given to the DQN. </p>
+        <ul style="font-size: 1.5rem;">
+            <li>
+                Attempt 1:
+                <ul style="font-size: 1.5rem;">
+                    <li>
+                        Action: penalties were given for hitting a tennis ball.
+                    </li>
+                    <li>
+                        Result: the robot would lay flat on the table and sway from side to side to avoid projectiles, abusing the fact that the least number of projectiles came through this region. This is not ideal in a real-world situation, as colliding with the table would
+                        still cause damage.
+                    </li>
+                </ul>
+            </li>
+            <li>
+                Attempt 2:
+                <ul style="font-size: 1.5rem;">
+                    <li>
+                        Action: to combat the robot’s tendency to lay flat on the table to avoid the majority of obstacles and therefore maximise its reward per episode, a penalty was added for collision with the table. Rewards are also now given for maintaining distance from
+                        an obstacle using the updated YOLO input observations.
+                    </li>
+                    <li>
+                        Result: the robot showed a new tendency to adopt a position standing straight up. While this helped it accrue rewards for ‘dodging’ projectiles coming down on the sides, its manipulability in this pose was severely reduced. This resulted in a sure hit
+                        for all projectiles coming down the centre.
+                    </li>
+                </ul>
+            </li>
+            <li>
+                Attempt 3: Current
+                <ul style="font-size: 1.5rem;">
+                    <li>
+                        Action: to increase the general manipulability of the robot to better respond to incoming projectiles, penalties were given for raising the end effector more than 1m above the table.
+                    </li>
+                    <li>
+                        Result: the robot maintains a more manipulable pose and is better able to respond to projectiles.
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <h2>Theoretical Improvements: </h2>
+        <p>DQN is not an entirely appropriate solution for controlling the robot but is the limit of our current knowledge. Its main limitation is the requirement for a discrete action space. In the case of this project, this meant that commands for the
+            end effector to move could only be given at predetermined speeds. Should there be a need to respond to different projectiles moving at different speeds, this would not be an adequate control method. A cursory search online shows that Deep
+            Deterministic Policy Gradient (DDPG) uses a similar Q-function structure as DQN but allows for the use of a continuous action space. <br /><br /> Increasing the complexity of the observation space to track more than one projectile could also
+            improve its ability to avoid more tennis balls at once. Additionally, changing the observations from the end effector’s distance to the nearest projectile to the distance from each joint to the projectile could help the robot sense when it
+            is in danger faster. This would add much more complexity to the problem, however.
+        </p>
     </div>
 </body>
 
