@@ -42,8 +42,8 @@ class CobotAI4RoboticsEnv(gym.Env):
                 high=np.array([.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05], dtype=np.float32))
         self.observation_space = gym.spaces.box.Box(
             # [Current pose, projectile data (closest n projectiles?), xy distance to end effector goal (if doing task)],
-            low=np.array([-40, -40, 40], dtype=np.float32), # 0 - distance to nearest obstacle. 1 - distance to goal. 2- distance to table.
-            high=np.array([40, 40, 40], dtype=np.float32)) #
+            low=np.array([-40, -40, -40, -40], dtype=np.float32), # 0 - distance to nearest obstacle. 1 - distance to goal. 2- distance to table.
+            high=np.array([40, 40, 40, 40], dtype=np.float32)) # 0-2: xyz end effector to obstacle, # 3-5: xyz to goal, 6: z to table
             # low=np.array([-.967, -2, -2.96, 0.19, -2.96, -2.09, -3.05, -1, -1, -1, -1, -1], dtype=np.float32), # -1 means no obstacle. If there is an obstacle, it is between 0 and the normalised upper limit.
             # high=np.array([.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05, 1, 1, 1, 1, 100], dtype=np.float32)) #
         self.np_random, _ = gym.utils.seeding.np_random()
@@ -56,7 +56,7 @@ class CobotAI4RoboticsEnv(gym.Env):
 
         self.reached_goal = False
         self._timeStep = 0.01
-        self._actionRepeat = 1 # Time until next action.
+        self._actionRepeat = 5 # Time until next action.
         self._renders = renders
         self._isDiscrete = isDiscrete
         self.car = None
@@ -73,9 +73,9 @@ class CobotAI4RoboticsEnv(gym.Env):
         self.active_projectiles = []
 
         # Camera positioning and orientation.
-        self._cam_dist = 6.5
-        self._cam_yaw = 270
-        self._cam_pitch = -5
+        self._cam_dist = 3#6.5
+        self._cam_yaw = 0
+        self._cam_pitch = -90
 
         # Define which debug mode we are in.
         # 0 - run normally.
@@ -90,17 +90,17 @@ class CobotAI4RoboticsEnv(gym.Env):
             print("YOLO LOADED")
 
 
-        self.old_cobot_obs = 100
+        self.old_cobot_obs = [40,40,40]
 
         # Init the Goals as none. Set them on reset or when goal achieved.
-        self.goal = None
+        # self.goal = None
 
         self.reset()
 
 
     def step(self, action):
         ob = None # Placeholders until these functions get put in place.
-        reward = 0
+        reward = 0 
 
         # xyz, rpy
         # 15 actions, 7 up, 7 down, 1 no change.
@@ -114,13 +114,13 @@ class CobotAI4RoboticsEnv(gym.Env):
             # print(len(motorCommands), motorCommands)
             # self.cobot.applyAction(motorCommands)
 
-            dv = 0.5
+            dv = 1.5
             dx = [0, -dv, dv, 0, 0, 0, 0][action]
             dy = [0, 0, 0, -dv, dv, 0, 0][action]
             dz = [0, 0, 0, 0, 0, -dv, dv][action]
-            # da = [0, 0, 0, 0, 0, -0.05, 0.05][action]
-            # f = 0.3
-            realAction = [dx, dy, dz, 0, 0]
+            da = [0, 0, 0, 0, 0, -0.05, 0.05][action]
+            f = 0.3
+            realAction = [dx, dy, dz, da, f] # Disable z movement.
 
             self.cobot.applyAction(realAction)
 
@@ -145,14 +145,28 @@ class CobotAI4RoboticsEnv(gym.Env):
             # Observation space is [current pose, projectile yolo_pred data (closest n projectiles)]
             ob = self.getObservation()
 
-            # Small reward for distance to goal. Positive if within 1m, negative if not.
-            reward = 0.5 - ob[1]
+            # Distance to goal. (this needs to be fixed now that ob is the distances not the positions)
+            # goalDist = np.linalg.norm(np.array(self.cobot.getObservation()[0:3]) - np.array(ob[3:6]))
 
-            if ob[1] <= 0.15: # If reached goal.
-                self.done = True
-                reward = 100
-            if ob[0] <= 0.5: # If near projectile.
-                reward = -ob[0]*10
+            # Distance to projectile.
+            projDist = np.linalg.norm(np.array(ob[0:3]))
+            # print("Projectile Distance:", projDist)
+            if (projDist > 0.6) & (projDist < 1):
+                reward += 0.1#projDist/self._actionRepeat
+
+            # Small reward for distance to goal. Positive if within 1m, negative if not.
+            # reward -= goalDist
+
+            # if goalDist <= 0.2: # If reached goal.
+            #     self.done = True
+            #     reward += 100
+
+            # if (projDist > 0.4) & (abs(ob[0]) < 1):
+            #     reward += 10
+            # elif (abs(ob[0]) < 1):
+            #     reward -= 10
+            # if projDist <= 0.5: # If near projectile.
+            #     reward += -10
 
             # Check if the goal is reached and update the goal
             # end_effector_x = self.cobot.getPose()[0]  # Assuming this gets the x position of the end effector
@@ -168,7 +182,7 @@ class CobotAI4RoboticsEnv(gym.Env):
 
             # Check for a hit and impose penalty (based on location?)
             for index, projectile in enumerate(self.active_projectiles):
-                contact_points = p.getClosestPoints(self.cobot.kukaUid, projectile.id, distance = 0)
+                contact_points = p.getClosestPoints(self.cobot.kukaUid, projectile.id, distance = 0.001)
                 if contact_points:
                     if self._renders:
                         print("Contact by ball no.", index, 'at point', f'({contact_points[0][5][0]:.2f}', f'{contact_points[0][5][1]:.2f}', f'{contact_points[0][5][2]:.2f})' , 'on KUKA.') 
@@ -176,17 +190,18 @@ class CobotAI4RoboticsEnv(gym.Env):
 
                     # End episode if hit.
                     self.done = True
-                    reward = -500
+                    reward += -100
                     break
-                if self.done:
-                    break
+            if self.done:
+                break
             # Check if hit table.
             contact_points = p.getClosestPoints(self.cobot.kukaUid, self.table_id, distance = 0)
             if contact_points:
                 if self._renders:
                     print("Contact on table at point", f'({contact_points[0][5][0]:.2f}', f'{contact_points[0][5][1]:.2f}', f'{contact_points[0][5][2]:.2f})' , 'on KUKA.')
                 self.done = True
-                reward = -500
+                reward += -100
+                break
 
             if self._renders:
                 time.sleep(self._timeStep)
@@ -194,7 +209,11 @@ class CobotAI4RoboticsEnv(gym.Env):
                 self.done = True
                 break
             self._envStepCounter += 1        
-        
+
+        # Add a penalty for the end effector going too high from the table.
+        # if ob[3] >= 0.9: 
+        #     reward += -10
+
         return ob, reward, self.done, dict()
 
     def seed(self, seed=None):
@@ -222,18 +241,18 @@ class CobotAI4RoboticsEnv(gym.Env):
         # print(self.cobot._base_position)
 
         #Set a goal
-        x = np.random.default_rng().uniform(0.3, 0.6, 1)[0]
-        y_roll = np.random.default_rng().uniform(0, 1, 1)[0]
-        if y_roll >= 0.5:
-            y = np.random.default_rng().uniform(-0.5, -0.4, 1)[0]
-        else:
-            y = np.random.default_rng().uniform(0.4, 0.5, 1)[0]
+        # x = np.random.default_rng().uniform(0.3, 0.4, 1)[0]
+        # y_roll = np.random.default_rng().uniform(0, 1, 1)[0]
+        # if y_roll >= 0.5:
+        #     y = np.random.default_rng().uniform(-0.3, -0.2, 1)[0]
+        # else:
+        #     y = np.random.default_rng().uniform(0.2, 0.3, 1)[0]
 
 
-        z = np.random.default_rng().uniform(self._h_table+0.2, self._h_table+0.6, 1)[0]     
-        self.goal = np.array([x,y,z])
+        # z = np.random.default_rng().uniform(self._h_table+0.4, self._h_table+0.5, 1)[0]     
+        # self.goal = np.array([x,y,z])
 
-        self.goal_id = Goal(self._p, self.goal)
+        # self.goal_id = Goal(self._p, self.goal)
 
         # Set up camera
         self.render()
@@ -244,7 +263,7 @@ class CobotAI4RoboticsEnv(gym.Env):
         self.active_projectiles = []
         self.done = False
 
-        self.old_cobot_obs = 100
+        self.old_cobot_obs = [40, 40, 40]
 
         # Test obstacle generation
         # self.generateProjectile()
@@ -252,6 +271,9 @@ class CobotAI4RoboticsEnv(gym.Env):
         return np.array(ob, dtype=np.float32)
 
     def _termination(self):
+        # if self._renders:
+        #     return False
+            # return self._envStepCounter > 2000
         return self._envStepCounter > 300
 
     def close(self):
@@ -268,23 +290,19 @@ class CobotAI4RoboticsEnv(gym.Env):
         # but not at the immovable base plate section (that's just unfair!).
 
         # Random object spawn locations
-        # dim | min | max |
-        # X   | 6   | 9   |
-        # Y   | -3  | 3   |
-        # Z   | 0.1   | 3   |
         z_roll = np.random.default_rng().uniform(0, 1, 1)[0]
-        if z_roll >= 0.5: # Low ball, on the sides.
-            x = 4#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
+        if z_roll >= 0.3: # Low ball, on the sides.
+            x = 2.5#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
             y_roll = np.random.default_rng().uniform(0, 1, 1)[0]
             if y_roll >= 0.5:
-                y = np.random.default_rng().uniform(0.36, 0.5, 1)[0]
+                y = np.random.default_rng().uniform(0.3, 0.5, 1)[0]
             else:
-                y = np.random.default_rng().uniform(-0.5, -0.36, 1)[0]
-            z = np.random.default_rng().uniform(self._h_table+0.05, self._h_table+0.5, 1)[0]
+                y = np.random.default_rng().uniform(-0.5, -0.3, 1)[0]
+            z = np.random.default_rng().uniform(self._h_table+0.15, self._h_table+0.5, 1)[0]
         else: # High ball, free space.
-            x = 4#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
+            x = 2.5#np.random.default_rng().uniform(4.0, 9.0, 1)[0]
             y = np.random.default_rng().uniform(-0.5, 0.5, 1)[0]
-            z = np.random.default_rng().uniform(self._h_table+0.5, self._h_table+0.7, 1)[0]          
+            z = np.random.default_rng().uniform(self._h_table+0.6, self._h_table+0.8, 1)[0]          
         # x = 9
         # y = 0.35
         # z = self._h_table+0.7
@@ -314,7 +332,7 @@ class CobotAI4RoboticsEnv(gym.Env):
         # target = np.array(self.cobot.base_position) + np.array([0,y,z])#np.array([0, y, z])
         target = np.array([self.cobot.base_position[0],y,z])
         # Direction and distance to target.
-        duration = 0.1 # Duration to apply force for. Larger is slower, smaller is faster. May miss target if too slow with gravity.
+        duration = 0.125 # Duration to apply force for. Larger is slower, smaller is faster. May miss target if too slow with gravity.
 
         # Initial velocity in 3d to hit target
         v0 = [(target[i] - init_pos[i]) / duration for i in range(3)]
@@ -339,7 +357,7 @@ class CobotAI4RoboticsEnv(gym.Env):
             return np.array([])
 
         base_pos, orn = self._p.getBasePositionAndOrientation(self.cobot.kukaUid) # .kukaUid gives the base pos and orn.
-        self.view_matrix = self._p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[base_pos[0]+5,0,self._h_table+0.5],
+        self.view_matrix = self._p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[base_pos[0]+1,0,self._h_table],
                                                                 distance=self._cam_dist,
                                                                 yaw=self._cam_yaw,
                                                                 pitch=self._cam_pitch,
@@ -487,10 +505,10 @@ class CobotAI4RoboticsEnv(gym.Env):
         projectilePos = None
 
         # Update YOLO predictions every n steps.
-        if ((self._envStepCounter % 10) == 0):
+        if ((self._envStepCounter % 5) == 0):
             if ((self.debug == 2) | (self.debug == 3)): # If training the DQN, don't use YOLO as it is slow. Use simulation.
                 if len(self.active_projectiles) == 0:
-                    cobot_obs = 100 # No obstacle.
+                    cobot_obs = [40,40,40] # No obstacle.
                 # Get the current end effector position.
                 kukaPos = np.array(self.cobot.getObservation()[0:3])
                 min_dist = 100 # Sufficiently large number.
@@ -502,10 +520,11 @@ class CobotAI4RoboticsEnv(gym.Env):
                     dist = np.linalg.norm(projectilePos - kukaPos)
                     if dist < min_dist:
                         min_dist = dist
-                        cobot_obs = dist
+                        cobot_obs = [kukaPos[0] - projectilePos[0],
+                                        kukaPos[1] - projectilePos[1],
+                                        kukaPos[2] - projectilePos[2]]
 
             # If not training the DQN.
-            yolo_obs = self.old_cobot_obs
             if (self.debug != 2) & (self.debug != 3): # If not training, use YOLO.
                 # yolo_pred should now be returning a list of obstacle positions. We must determine the closest one.
                 yolo_pred = self.getYOLOPrediction()
@@ -517,20 +536,25 @@ class CobotAI4RoboticsEnv(gym.Env):
                         dist = np.linalg.norm(pos - kukaPos)
                         if dist < min_dist:
                             min_dist = dist
-                            yolo_obs = dist
-                cobot_obs = yolo_obs
+                            cobot_obs = [kukaPos[0] - pos[0],
+                                        kukaPos[1] - pos[1],
+                                        kukaPos[2] - pos[2]]
 
             # print(yolo_pred, projectilePos)
             # print(yolo_obs, cobot_obs)
 
+        kukaPos = self.cobot.getObservation()[0:3]
+
         # Get the end effector distance to goal.
-        goalDistance = np.linalg.norm(np.array(self.cobot.getObservation()[0:3]) - self.goal)
+        # goalDistance = [kukaPos[0] - self.goal[0],
+        #                 kukaPos[1] - self.goal[1],
+        #                 kukaPos[2] - self.goal[2]] #np.linalg.norm(np.array(self.cobot.getObservation()[0:3]) - self.goal)
 
         # Get z distance to table.
         tableDistance = np.abs(np.array(self.cobot.getObservation()[2]) - self._h_table+0.08)
-
-        observation.append(cobot_obs)
-        observation.append(goalDistance)
+        # print(cobot_obs, goalDistance, tableDistance)
+        observation.extend(list(cobot_obs)) # Append xyz to obstacle.
+        # observation.extend(list(goalDistance)) # Append xyz to goal.
         observation.append(tableDistance)
         self.old_cobot_obs = cobot_obs
         # observation.extend(list(closest_projectile_data))

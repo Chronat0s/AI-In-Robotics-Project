@@ -15,14 +15,14 @@ class Kuka:
   def __init__(self, urdfRootPath=pybullet_data.getDataPath(), timeStep=0.01, base_position=[0,0,0]):
     self.urdfRootPath = urdfRootPath
     self.timeStep = timeStep
-    self.maxVelocity = 3.5#.35
+    self.maxVelocity = 1.5
     self.maxForce = 2000.
     self.fingerAForce = 2
     self.fingerBForce = 2.5
     self.fingerTipForce = 2
     self.useInverseKinematics = 1
     self.useSimulation = 1
-    self.useNullSpace = 21
+    self.useNullSpace = 1 # Enable/disable joint limits.
     self.useOrientation = 1
     self.kukaEndEffectorIndex = 6
     self.kukaGripperIndex = 7
@@ -119,13 +119,13 @@ class Kuka:
       #print(actualEndEffectorPos[2])
 
       self.endEffectorPos[0] = self.endEffectorPos[0] + dx
-      if (self.endEffectorPos[0] > 0.65):
+      if (self.endEffectorPos[0] > 0.65): # Change workspace limits.
         self.endEffectorPos[0] = 0.65
       if (self.endEffectorPos[0] < 0.50):
         self.endEffectorPos[0] = 0.50
       self.endEffectorPos[1] = self.endEffectorPos[1] + dy
-      if (self.endEffectorPos[1] < -0.17):
-        self.endEffectorPos[1] = -0.17
+      if (self.endEffectorPos[1] < -0.22):
+        self.endEffectorPos[1] = -0.22
       if (self.endEffectorPos[1] > 0.22):
         self.endEffectorPos[1] = 0.22
 
@@ -135,6 +135,8 @@ class Kuka:
       #print(actualEndEffectorPos[2])
       #if (dz<0 or actualEndEffectorPos[2]<0.5):
       self.endEffectorPos[2] = self.endEffectorPos[2] + dz
+      if (self.endEffectorPos[2] >= self.base_position[2] + 0.8):
+        self.endEffectorPos[2] = self.base_position[2] + 0.8
 
       self.endEffectorAngle = self.endEffectorAngle + da
       pos = self.endEffectorPos
@@ -142,7 +144,8 @@ class Kuka:
       if (self.useNullSpace == 1):
         if (self.useOrientation == 1):
           jointPoses = p.calculateInverseKinematics(self.kukaUid, self.kukaEndEffectorIndex, pos,
-                                                    orn, self.ll, self.ul, self.jr, self.rp)
+                                                    orn, self.ll, self.ul, self.jr, self.rp, 
+                                                    )
         else:
           jointPoses = p.calculateInverseKinematics(self.kukaUid,
                                                     self.kukaEndEffectorIndex,
