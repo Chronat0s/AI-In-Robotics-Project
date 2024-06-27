@@ -15,7 +15,7 @@ class Kuka:
   def __init__(self, urdfRootPath=pybullet_data.getDataPath(), timeStep=0.01, base_position=[0,0,0]):
     self.urdfRootPath = urdfRootPath
     self.timeStep = timeStep
-    self.maxVelocity = 1.5
+    self.maxVelocity = 2
     self.maxForce = 2000.
     self.fingerAForce = 2
     self.fingerBForce = 2.5
@@ -119,10 +119,10 @@ class Kuka:
       #print(actualEndEffectorPos[2])
 
       self.endEffectorPos[0] = self.endEffectorPos[0] + dx
-      if (self.endEffectorPos[0] > 0.65): # Change workspace limits.
-        self.endEffectorPos[0] = 0.65
-      if (self.endEffectorPos[0] < 0.50):
-        self.endEffectorPos[0] = 0.50
+      if (self.endEffectorPos[0] > 0.5): # Change workspace limits.
+        self.endEffectorPos[0] = 0.5
+      if (self.endEffectorPos[0] < 0.3):
+        self.endEffectorPos[0] = 0.3                
       self.endEffectorPos[1] = self.endEffectorPos[1] + dy
       if (self.endEffectorPos[1] < -0.22):
         self.endEffectorPos[1] = -0.22
@@ -135,8 +135,10 @@ class Kuka:
       #print(actualEndEffectorPos[2])
       #if (dz<0 or actualEndEffectorPos[2]<0.5):
       self.endEffectorPos[2] = self.endEffectorPos[2] + dz
-      if (self.endEffectorPos[2] >= self.base_position[2] + 0.8):
-        self.endEffectorPos[2] = self.base_position[2] + 0.8
+      if (self.endEffectorPos[2] >= (self.base_position[2] + 0.6)):
+        self.endEffectorPos[2] = self.base_position[2] + 0.6
+      if (self.endEffectorPos[2] <= (self.base_position[2] + 0.25)):
+        self.endEffectorPos[2] = self.base_position[2] + 0.25
 
       self.endEffectorAngle = self.endEffectorAngle + da
       pos = self.endEffectorPos
@@ -144,7 +146,7 @@ class Kuka:
       if (self.useNullSpace == 1):
         if (self.useOrientation == 1):
           jointPoses = p.calculateInverseKinematics(self.kukaUid, self.kukaEndEffectorIndex, pos,
-                                                    orn, self.ll, self.ul, self.jr, self.rp, 
+                                                    orn, self.jr, self.rp, 
                                                     )
         else:
           jointPoses = p.calculateInverseKinematics(self.kukaUid,
@@ -175,22 +177,22 @@ class Kuka:
                                   jointIndex=i,
                                   controlMode=p.POSITION_CONTROL,
                                   targetPosition=jointPoses[i],
-                                  # targetVelocity=0,
+                                  targetVelocity=self.maxVelocity,
                                   force=self.maxForce,
                                   maxVelocity=self.maxVelocity,
-                                  positionGain=0.3,
-                                  velocityGain=1
+                                  positionGain=2,
+                                  velocityGain=0.1
                                   )
       else:
         #reset the joint state (ignoring all dynamics, not recommended to use during simulation)
         for i in range(self.numJoints):
           p.resetJointState(self.kukaUid, i, jointPoses[i])
       #fingers
-      # p.setJointMotorControl2(self.kukaUid,
-      #                         7,
-      #                         p.POSITION_CONTROL,
-      #                         targetPosition=self.endEffectorAngle,
-      #                         force=self.maxForce)
+      p.setJointMotorControl2(self.kukaUid,
+                              7,
+                              p.POSITION_CONTROL,
+                              targetPosition=self.endEffectorAngle,
+                              force=self.maxForce)
       # p.setJointMotorControl2(self.kukaUid,
       #                         8,
       #                         p.POSITION_CONTROL,
